@@ -7,19 +7,27 @@ const BASE_URL = 'http://localhost:5000';
 const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
   const [err, setErr] = useState("");
+  // const [user, setUser] = useState(null);  // Explicitly set initial state to null
   const navigate = useNavigate();
 
   const validateOtp = async (otp) => {
     try {
       console.log("Verifying OTP...");
       const response = await axios.post(`${BASE_URL}/auth/verifyotp`, { code: otp });
-      console.log("Response received:", response.data);
+      console.log("Response received:", response.data.user);
       console.log("Success status:", response.data.success);
 
-      // setting the token ont he localstorage for user authentication while the user is logged in.
-      localStorage.setItem("token",response.data.accessToken)
-      return response.data.success;
-
+      // Assume user data is part of the initial response for successful verification
+      if (response.data.success && response.data.user) {
+        console.log("User name:", response.data.user.name);
+        // setUser(response.data.user); // Store the complete user object
+        localStorage.setItem("token", response.data.accessToken); // Set token in local storage
+        navigate("/logged_in_dashboard", {state: {user: response.data.user}}); 
+        return true;
+      } else {
+        setErr("Verification failed: Invalid OTP or user not found");
+        return false;
+      }
     } catch (error) {
       console.error("Error during verification:", error.response || error);
       const errorMsg = error.response && error.response.data && error.response.data.message
@@ -28,17 +36,17 @@ const VerifyOtp = () => {
       setErr(errorMsg);
       return false;
     }
-  };  
-    
-    const handleVerification = async (e) => {
-      e.preventDefault();
-      setErr("");
-      const isValid = await validateOtp(otp);
-      if (!isValid) {
-        console.log("Verification failed, check errors for details.");
-      }else{
-        console.log("Logged in successful")
-        navigate("/dashboard");
+  };
+
+  const handleVerification = async (e) => {
+    e.preventDefault();
+    setErr("");
+    const isValid = await validateOtp(otp);
+    if (isValid) {
+      console.log("Logged in successful");
+     // Pass the complete user object through navigation state
+    } else {
+      console.log("Verification failed, check errors for details.");
     }
   };
 

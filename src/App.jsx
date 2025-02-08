@@ -5,6 +5,7 @@ import Register from './components/Register.jsx'
 import Login from './components/Login.jsx'
 import VerifyOtp from './components/Verifyotp.jsx'
 import Dashboard from './components/Dashboard.jsx'
+import Logged_in_dashboard from './components/Logged_in_dashboard.jsx'
 const App = () => {
   return (
     <div>
@@ -15,6 +16,7 @@ const App = () => {
       <Route path='/login' element={<Login/>}></Route>
       <Route path='/verifyotp' element={<VerifyOtp/>}></Route>
       <Route path='/dashboard' element={<Dashboard/>}></Route>
+      <Route path='/logged_in_dashboard' element={<Logged_in_dashboard/>}></Route>
     </Routes>
     </BrowserRouter>
     </div>

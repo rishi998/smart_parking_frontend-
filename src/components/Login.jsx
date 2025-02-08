@@ -27,9 +27,6 @@ const Login = () => {
       const response = await axios.post(`${BASE_URL}/auth/login`, {
         email
       });
-      
-      
-      console.log("Response received:", response.data);
 
       if (response.data && response.data.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
