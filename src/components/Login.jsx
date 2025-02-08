@@ -69,11 +69,11 @@ const Login = () => {
               {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
             </div>
             <div className="mb-4">
-              <button type="submit" className="btn-primary w-full bg-blue-400 rounded-lg text-lg">
+              <button type="submit" className="btn-primary w-full bg-blue-400 rounded-lg text-lg mt-5">
                 LOGIN
               </button>
-              <p className="text-center mt-7">Not registered?</p>
-              <button onClick={handleclick} className="btn-primary bg-blue-400 rounded-lg text-lg p-1 ml-38 ">Register</button>
+              <p className="text-center mt-3">Not registered?</p>
+              <button onClick={handleclick} className="btn-primar text-md text-blue-500 p-1 ml-38 ">Register</button>
             </div>
           </form>
         </div>

@@ -77,36 +77,39 @@ const Register = () => {
               <input
                 type="text"
                 placeholder="Name"
-                className="input-box w-full"
+                className="input-box w-full text-center bg-amber-50"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
               <input
                 type="text"
                 placeholder="Email"
-                className="input-box w-full"
+                className="input-box w-full text-center bg-amber-50"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               <input
                 type="password"
                 placeholder="Password"
-                className="input-box w-full"
+                className="input-box w-full text-center bg-amber-50"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <input
                 type="tel"
                 placeholder="Phone"
-                className="input-box w-full"
+                className="input-box w-full text-center bg-amber-50"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
               />
               {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
             </div>
             <div className="mb-4">
-              <button type="submit" className="btn-primary">
-                SIGNUP
+              <button type="submit" className="btn-primary w-full rounded-lg mb-1 bg-blue-400">
+                Register
+              </button>
+              <button type="button" onClick={() => navigate('/dashboard')} className="btn-primar w-full rounded-lg text-blue-500">
+                Home
               </button>
             </div>
           </form>

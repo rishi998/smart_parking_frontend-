@@ -7,7 +7,6 @@ const BASE_URL = 'http://localhost:5000';
 const VerifyOtp = () => {
   const [otp, setOtp] = useState("");
   const [err, setErr] = useState("");
-  // const [user, setUser] = useState(null);  // Explicitly set initial state to null
   const navigate = useNavigate();
 
   const validateOtp = async (otp) => {
@@ -17,12 +16,10 @@ const VerifyOtp = () => {
       console.log("Response received:", response.data.user);
       console.log("Success status:", response.data.success);
 
-      // Assume user data is part of the initial response for successful verification
       if (response.data.success && response.data.user) {
         console.log("User name:", response.data.user.name);
-        // setUser(response.data.user); // Store the complete user object
-        localStorage.setItem("token", response.data.accessToken); // Set token in local storage
-        navigate("/logged_in_dashboard", {state: {user: response.data.user}}); 
+        localStorage.setItem("token", response.data.accessToken);
+        navigate("/logged_in_dashboard", {state: {user: response.data.user}});
         return true;
       } else {
         setErr("Verification failed: Invalid OTP or user not found");
@@ -44,7 +41,6 @@ const VerifyOtp = () => {
     const isValid = await validateOtp(otp);
     if (isValid) {
       console.log("Logged in successful");
-     // Pass the complete user object through navigation state
     } else {
       console.log("Verification failed, check errors for details.");
     }
@@ -69,6 +65,11 @@ const VerifyOtp = () => {
             <div className="mb-4">
               <button type="submit" className="btn-primary bg-emerald-500 w-full rounded-lg">
                 Verify
+              </button>
+            </div>
+            <div className="mb-4">
+              <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary bg-blue-500 w-full rounded-lg">
+                Go to Home
               </button>
             </div>
           </form>
