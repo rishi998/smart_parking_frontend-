@@ -41,6 +41,10 @@ const Login = () => {
     }
   };
 
+  const handleclick=()=>{
+    navigate('/register');
+  }
+
   function validateEmail(email) {
     const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(String(email).toLowerCase());
@@ -68,6 +72,8 @@ const Login = () => {
               <button type="submit" className="btn-primary w-full bg-blue-400 rounded-lg text-lg">
                 LOGIN
               </button>
+              <p className="text-center mt-7">Not registered?</p>
+              <button onClick={handleclick} className="btn-primary bg-blue-400 rounded-lg text-lg p-1 ml-38 ">Register</button>
             </div>
           </form>
         </div>

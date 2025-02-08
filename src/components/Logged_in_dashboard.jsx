@@ -10,7 +10,7 @@ const Logged_in_dashboard = () => {
   // Check if the user object or user.name is undefined or null
   if (!user || !user.name) {
     console.log("No user data available.");
-    return <p>No user data found, please log in.</p>;  // Provide a fallback UI
+    return <p>please Log In.</p>;  // Provide a fallback UI
   }
 
   const handleclick=()=>{
@@ -29,10 +29,10 @@ const Logged_in_dashboard = () => {
           <a href="#services" className="mx-2 px-3 py-2 rounded hover:bg-gray-700">Services</a>
         </div>
         <div className="login-button">
-          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+          <button >
             Hello, {user.name} {/* Access and display the user's name correctly */}
           </button>
-          <button onClick={handleclick}>Logout</button>
+          <button onClick={handleclick} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-5">Logout</button>
         </div>
       </nav>
     </div>
