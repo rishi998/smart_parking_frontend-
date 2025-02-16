@@ -19,7 +19,7 @@ const VerifyOtp = () => {
       if (response.data.success && response.data.user) {
         console.log("User name:", response.data.user.name);
         localStorage.setItem("token", response.data.accessToken);
-        navigate("/logged_in_dashboard", {state: {user: response.data.user}});
+        navigate("/dashboard", {state: {user: response.data.user}});
         return true;
       } else {
         setErr("Verification failed: Invalid OTP or user not found");
@@ -68,8 +68,8 @@ const VerifyOtp = () => {
               </button>
             </div>
             <div className="mb-4">
-              <button type="button" onClick={() => navigate('/dashboard')} className="btn-secondary bg-blue-500 w-full rounded-lg">
-                Go to Home
+              <button type="button" onClick={() => navigate('/register')} className="btn-secondary bg-blue-500 w-full rounded-lg">
+                Register Instead
               </button>
             </div>
           </form>

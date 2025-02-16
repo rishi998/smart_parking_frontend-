@@ -50,7 +50,7 @@ const Register = () => {
         localStorage.setItem("token", response.data.accessToken);
       }
       if(response.data.success){
-        navigate("/dashboard");
+        navigate("/");
       }
     } catch (error) {
       console.error("Error during registration:", error);
@@ -108,8 +108,8 @@ const Register = () => {
               <button type="submit" className="btn-primary w-full rounded-lg mb-1 bg-blue-400">
                 Register
               </button>
-              <button type="button" onClick={() => navigate('/dashboard')} className="btn-primar w-full rounded-lg text-blue-500">
-                Home
+              <button type="button" onClick={() => navigate('/')} className="btn-primar w-full rounded-lg text-blue-500">
+                Login
               </button>
             </div>
           </form>
