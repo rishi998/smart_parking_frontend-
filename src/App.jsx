@@ -8,6 +8,8 @@ import VerifyOtp from './components/Verifyotp.jsx'
 import Dashboard from './components/Dashboard.jsx'
 import Book_parking from './components/Book_parking.jsx'
 import ContactUs from './components/Contactus.jsx'
+import MyBookings from './components/Mybookings.jsx'
+import AboutUs from './components/Aboutus.jsx'
 const App = () => {
   return (
     <div>
@@ -19,6 +21,8 @@ const App = () => {
       <Route path='/dashboard' element={<Dashboard/>}></Route>
       <Route path='/book_parking' element={<Book_parking/>}></Route>
       <Route path='/contact_us' element={<ContactUs/>}></Route>
+      <Route path='/mybookings' element={<MyBookings/>}></Route>
+      <Route path='/about_us' element={<AboutUs/>}></Route>
     </Routes>
     </BrowserRouter>
     </div>

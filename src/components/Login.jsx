@@ -53,9 +53,9 @@ const Login = () => {
   return (
     <>
     {/* <p className="">SMART CAR PARKING</p> */}
-    <div className="h-screen bg-emerald-300 overflow-hidden flex items-center justify-center">
+    <div className="h-screen bg-green-500 overflow-hidden flex items-center justify-center">
       <div className="container flex items-center justify-center mx-8 space-x-8">
-        <div className="w-full max-w-md bg-cyan-100 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
+        <div className="w-full max-w-md bg-gradient-to-r from-cyan-300 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
           <form onSubmit={handlelogin} className="w-full">
             <h4 className="text-2xl font-bold mb-6 text-center">LOG - IN</h4>
             <div className="mb-4 border rounded-lg">
@@ -69,7 +69,7 @@ const Login = () => {
               {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
             </div>
             <div className="mb-4">
-              <button type="submit" className="btn-primary w-full bg-blue-400 rounded-lg text-lg mt-5">
+              <button type="submit" className="btn-primary w-full bg-blue-500 rounded-lg text-lg mt-5">
                 LOGIN
               </button>
               <p className="text-center mt-3">Not registered?</p>

@@ -1,7 +1,9 @@
 import React from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Dashboard = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const user = location.state?.user;
 
@@ -21,38 +23,71 @@ const Dashboard = () => {
   const handlecontact = () => {
     navigate("/contact_us");
   };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
   return (
     <div>
       <nav className="bg-gray-800 text-white flex justify-between items-center p-4 fixed top-0 left-0 w-full z-50">
-        <div className="logo text-lg font-bold">
-          <h1>Logo</h1>
+        <div className="logo text-3xl font-bold">
+          <h1>ParkerPro</h1>
         </div>
         <div className="nav-links flex">
-          <a href="#home" className="mx-2 px-3 py-2 rounded hover:bg-gray-700">
+          <a href="/dashboard" className="mx-2 px-3 py-2 rounded hover:bg-gray-700 font-semibold text-xl">
             Home
           </a>
-          <a href="#about" className="mx-2 px-3 py-2 rounded hover:bg-gray-700">
-            About
+          <a href="/book_parking" className="mx-2 px-3 py-2 rounded hover:bg-gray-700 font-semibold text-xl">
+            Book Parking
           </a>
           <a
-            href="#services"
-            className="mx-2 px-3 py-2 rounded hover:bg-gray-700"
+            href="/about_us"
+            className="mx-2 px-3 py-2 rounded hover:bg-gray-700 font-semibold text-xl"
           >
-            Services
+            About Us
           </a>
         </div>
         <div className="login-button">
-          <button>
-            Hello, {user.name}{" "}
-            {/* Access and display the user's name correctly */}
-          </button>
+          
+          
           <button
+            onClick={toggleSidebar}
+            className="p-2 bg-gray-800 text-white rounded-lg focus:outline-none"
+          >
+            <img src="./src/assets/images/user.png" alt="user" className="h-8 w-8 m-0" />
+          </button>
+          {/* sidebar */}
+          <div
+        className={`fixed inset-y-18 right-0 w-64 bg-gray-800 text-white transform transition-transform duration-300 ease-in-out rounded-2xl ${
+          isSidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        <div className="p-4">
+          <h2 className="text-2xl font-bold"><button>Hello, {user.name}👋 </button></h2>
+          <ul className="mt-4">
+            <li className="mb-2">
+              <a href="/mybookings" className="hover:text-gray-400">
+                My Bookings
+              </a>
+            </li>
+            <li className="mb-2">
+              <a href="#" className="hover:text-gray-400">
+                Extras
+              </a>
+            </li>
+            <li className="mb-2">
+            <button
             onClick={handleclick}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-5"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded ml-0"
           >
             Logout
           </button>
+            </li>
+          </ul>
         </div>
+      </div>
+        </div>
+        
       </nav>
       <section className="text-center py-20 bg-gradient-to-r from-green-500 to-green-600 text-white">
         <h1 className="text-5xl font-bold mb-6">Welcome to Smart Parking</h1>
@@ -85,10 +120,18 @@ const Dashboard = () => {
         </button>
       </section>
       <section className="text-center bg-white p-8 my-6 rounded-lg shadow-lg">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">Contact Us</h2>
-          <p className="text-xl text-gray-600 mb-6">If you have any questions or need support, feel free to reach out to us!</p>
-            <button onClick={handlecontact} className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300">Contact Us</button>
-        </section>
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">Contact Us</h2>
+        <p className="text-xl text-gray-600 mb-6">
+          If you have any questions or need support, feel free to reach out to
+          us!
+        </p>
+        <button
+          onClick={handlecontact}
+          className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-300"
+        >
+          Contact Us
+        </button>
+      </section>
     </div>
   );
 };
