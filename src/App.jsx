@@ -10,15 +10,24 @@ import Book_parking from './components/Book_parking.jsx'
 import ContactUs from './components/Contactus.jsx'
 import MyBookings from './components/Mybookings.jsx'
 import AboutUs from './components/Aboutus.jsx'
+import Choice from './components/Choice.jsx'
+import Alogin from './components/Alogin.jsx'
+import Aregister from './components/Aregister.jsx'
+import Adashboard from './components/Adashboard.jsx'
 const App = () => {
   return (
     <div>
     <BrowserRouter>
     <Routes>
-      <Route path='/' element={<Login/>}></Route>
+      <Route path='/' element={<Choice/>}></Route>
+      <Route path='/adminlogin' element={<Alogin/>}></Route>
+      <Route path='/login' element={<Login/>}></Route>
+      <Route path='/adminregister' element={<Aregister/>}></Route>
       <Route path='/register' element={<Register/>}></Route>
       <Route path='/verifyotp' element={<VerifyOtp/>}></Route>
       <Route path='/dashboard' element={<Dashboard/>}></Route>
+      <Route path='/admindashboard' element={<Adashboard/>}></Route>
+      
       <Route path='/book_parking' element={<Book_parking/>}></Route>
       <Route path='/contact_us' element={<ContactUs/>}></Route>
       <Route path='/mybookings' element={<MyBookings/>}></Route>

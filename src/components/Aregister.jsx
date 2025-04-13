@@ -4,11 +4,11 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:5000";
 
-const Register = () => {
+const Aregister = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
+  // const [phone, setPhone] = useState("");
   const [err, setErr] = useState(null);
 
   const navigate = useNavigate();
@@ -29,18 +29,13 @@ const Register = () => {
       setErr("Please enter a password");
       return;
     }
-    if (!phone) {
-      setErr("Please enter a phone number");
-      return;
-    }
 
     try {
       console.log("Sending request to register...");
-      const response = await axios.post(`${BASE_URL}/auth/register`, {
+      const response = await axios.post(`${BASE_URL}/adminauth/register`, {
         email,
         name,
         password,
-        phone,
       });
 
       console.log("Response received:", response.data);
@@ -50,7 +45,7 @@ const Register = () => {
         localStorage.setItem("token", response.data.accessToken);
       }
       if (response.data.success) {
-        navigate("/login");
+        navigate("/adminlogin");
       }
     } catch (error) {
       console.error("Error during registration:", error);
@@ -75,8 +70,8 @@ const Register = () => {
         <div className="w-full max-w-md bg-gradient-to-r from-cyan-200 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
           <form onSubmit={handleSignup} className="w-full">
           <div className="flex flex-row space-x-26">
-              <h4 className="text-2xl font-bold mb-6 text-center pl-40">USER</h4>
-              <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
+            <h4 className="text-2xl font-semibold mb-6 text-center pl-35">ADMIN</h4>
+            <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
           </div>
             <div className="mb-4">
               <input
@@ -100,13 +95,6 @@ const Register = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-              <input
-                type="tel"
-                placeholder="Phone"
-                className="input-box w-full text-center bg-amber-100"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
               {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
             </div>
             <div className="mb-4">
@@ -118,7 +106,7 @@ const Register = () => {
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/adminlogin")}
                 className="btn-primar w-full rounded-lg text-blue-500 font-semibold"
               >
                 Login
@@ -131,4 +119,4 @@ const Register = () => {
   );
 };
 
-export default Register;
+export default Aregister;

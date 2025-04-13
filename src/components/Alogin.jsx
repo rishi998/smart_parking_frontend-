@@ -4,11 +4,10 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:5000";
 
-const Login = () => {
-  const [name, setName] = useState("");
+const Alogin = () => {
+  // const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
   const [err, setErr] = useState(null);
 
   const navigate = useNavigate();
@@ -22,14 +21,15 @@ const Login = () => {
     }
     try {
       console.log("Sending request to login...");
-      const response = await axios.post(`${BASE_URL}/auth/login`, {
-        email,
+      const response = await axios.post(`${BASE_URL}/adminauth/login`, {
+        email,password
       });
-      // response.data && response.data.accessToken
-
+      
       if (response) {
-        navigate("/verifyotp");
-        localStorage.setItem("token", response.data.accessToken);
+        navigate("/admindashboard", { state: { admin: response.data.admin } });
+        localStorage.setItem("token", response.data.admin.accesstoken);
+        localStorage.setItem("admin", response.data.admin.name);
+        console.log("RESPONSE DATA : ",response.data)
       }
     } catch (error) {
       console.error("Error during registration:", error);
@@ -41,14 +41,14 @@ const Login = () => {
 
       if (error.response && error.response.status === 404) {
         navigate('/login')
-        const errorMsg = "Email address does not exist. Please register.";
+        errorMsg = "Email address does not exist. Please register.";
       }
       setErr(errorMsg);
     }
   };
 
   const handleclick = () => {
-    navigate("/register");
+    navigate("/adminregister");
   };
 
   function validateEmail(email) {
@@ -64,9 +64,9 @@ const Login = () => {
         <div className="container flex items-center justify-center mx-8 space-x-8">
           <div className="w-full max-w-md bg-gradient-to-r from-cyan-300 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
             <form onSubmit={handlelogin} className="w-full">
-              <div className="flex flex-row space-x-26">
-              <h4 className="text-2xl font-bold mb-6 text-center pl-40">USER</h4>
-              <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
+              <div className="flex flex-row space-x-30">
+              <h4 className="text-2xl font-bold mb-6 text-center pl-35">ADMIN</h4>
+              <h4 className="btn-primary cursor-pointer" onClick={()=>{navigate("/")}}>Home</h4>
               </div>
               <div className="mb-4 border rounded-lg">
                 <input
@@ -76,12 +76,19 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
+                <input
+                  type="text"
+                  placeholder="Enter Password"
+                  className="input-box w-full text-center text-lg"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
                 {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
               </div>
               <div className="mb-4">
                 <button
                   type="submit"
-                  className="btn-primary w-full bg-blue-500 rounded-lg text-lg mt-5"
+                  className="btn-primary w-full bg-blue-500 rounded-lg text-lg mt-5 cursor-pointer"
                 >
                   LOGIN
                 </button>
@@ -101,4 +108,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Alogin;

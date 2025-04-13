@@ -15,7 +15,7 @@ const Dashboard = () => {
   }
   const handleclick = () => {
     localStorage.removeItem("token");
-    navigate("/");
+    navigate("/login");
   };
   const handlebooking = () => {
     navigate("/book_parking");
