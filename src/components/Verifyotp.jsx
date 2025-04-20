@@ -19,6 +19,7 @@ const VerifyOtp = () => {
       if (response.data.success && response.data.user) {
         console.log("User name:", response.data.user.name);
         localStorage.setItem("token", response.data.accessToken);
+        localStorage.setItem("user", response.data.user.name);
         navigate("/dashboard", {state: {user: response.data.user}});
         return true;
       } else {

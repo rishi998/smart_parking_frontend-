@@ -1,92 +1,280 @@
-import React from 'react';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const MyBookings = () => {
-  const bookings = [
-    {
-      id: 'B1',
-      spot: 'Spot 1',
-      location: 'Downtown Parking Garage',
-      date: '2025-02-14',
-      time: '10:00 AM - 12:00 PM',
-      paymentStatus: 'Paid',
-      bookingStatus: 'Confirmed',
-    },
-    {
-      id: 'B2',
-      spot: 'Spot 2',
-      location: 'City Center Parking Lot',
-      date: '2025-02-18',
-      time: '2:00 PM - 4:00 PM',
-      paymentStatus: 'Pending',
-      bookingStatus: 'Pending',
-    },
-    {
-      id: 'B3',
-      spot: 'Spot 3',
-      location: 'Airport Parking',
-      date: '2025-02-20',
-      time: '5:00 PM - 7:00 PM',
-      paymentStatus: 'Paid',
-      bookingStatus: 'Confirmed',
-    },
-  ];
+  const username = localStorage.getItem("user");
+  const accessToken = localStorage.getItem("token");
+
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+
+  useEffect(() => {
+    const fetchBookings = async () => {
+      if (!username || !accessToken) {
+        setError("User not authenticated.");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const res = await axios.get(
+          `http://localhost:5000/bookings/${username}`
+        );
+        setBookings(res.data.bookings);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to fetch bookings.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBookings();
+  }, []);
+
+  const handleViewDetails = (bookingId) => {
+    const booking = bookings.find((b) => b._id === bookingId);
+    setSelectedBooking(booking);
+    setShowDetailModal(true);
+  };
+  const navigate = useNavigate();
+  const handleBackButton = () => {
+    const user = localStorage.getItem("user");
+    navigate("/dashboard", { state: { user } });
+  };
+  const handleCancelClick = (bookingId) => {
+    const booking = bookings.find((b) => b._id === bookingId);
+    setSelectedBooking(booking);
+    setShowCancelModal(true);
+  };
+
+  const handleConfirmCancel = async () => {
+    try {
+      const response = await axios.delete(
+        `http://localhost:5000/bookings/cancel/${selectedBooking._id}`
+      );
+
+      if (response.data.success) {
+        setBookings((prev) =>
+          prev.filter((b) => b._id !== selectedBooking._id)
+        );
+        setShowCancelModal(false);
+        setSelectedBooking(null);
+      } else {
+        alert("Failed to cancel booking.");
+      }
+    } catch (err) {
+      console.error("Cancel Error:", err);
+      alert("Error occurred while canceling.");
+    }
+  };
+
+  if (loading)
+    return <div className="text-center mt-10">Loading bookings...</div>;
+  if (error)
+    return <div className="text-center text-red-500 mt-10">{error}</div>;
 
   return (
-    <div className="max-w-4xl mx-auto p-5 bg-gray-50 rounded-lg shadow-md text-center">
-      <h2 className="text-3xl font-bold text-gray-800 mb-4">My Parking Bookings</h2>
-      <p className="text-gray-600 mb-8">
-        View your current and past parking bookings, including location, time, and payment status.
+    <div className="max-w-6xl mx-auto p-6 bg-gray-50 rounded-lg shadow-md">
+      <h2 className="text-3xl font-bold text-center text-gray-800 mb-4">
+        Your Bookings
+      </h2>
+      <div className="text-center mb-6">
+        <button
+          onClick={handleBackButton}
+          className="absolute top-4 left-4 p-3 rounded-full bg-gray-700 text-white hover:bg-gray-600 transition-all duration-300"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </button>
+      </div>
+      <p className="text-center text-gray-600 mb-8">
+        View and manage your bookings here!!
       </p>
 
-      <div className="flex flex-col gap-6">
-        {bookings.map((booking) => (
-          <div
-            key={booking.id}
-            className="bg-white p-6 rounded-lg shadow-sm text-left"
-          >
-            {/* Booking Header */}
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold text-gray-800">
-                {booking.spot} at {booking.location}
+      {bookings.length === 0 ? (
+        <p className="text-center text-gray-500">No bookings found.</p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {bookings.map((booking) => (
+            <div
+              key={booking._id}
+              className="bg-white p-6 rounded-lg shadow-md"
+            >
+              <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                {booking.area}
               </h3>
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  booking.bookingStatus === 'Confirmed'
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-orange-100 text-orange-700'
-                }`}
-              >
-                {booking.bookingStatus}
-              </span>
-            </div>
-
-            {/* Booking Details */}
-            <div className="text-gray-600 space-y-2">
-              <p>
-                <strong>Date:</strong> {booking.date}
+              <p className="text-gray-600 mb-1">
+                <strong>Address:</strong> {booking.address || "N/A"}
               </p>
-              <p>
-                <strong>Time:</strong> {booking.time}
+              <p className="text-gray-600 mb-1">
+                <strong>Level:</strong> {booking.level}
               </p>
-              <p>
-                <strong>Payment Status:</strong> {booking.paymentStatus}
-              </p>
-            </div>
-
-            {/* Booking Actions */}
-            <div className="mt-6 flex gap-4">
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
-                View Details
-              </button>
-              {booking.bookingStatus === 'Confirmed' && (
-                <button className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">
-                  Cancel Booking
+              <div className="flex justify-between items-center mt-4">
+                <span
+                  className={`px-3 py-1 rounded-full text-sm font-medium ${
+                    booking.bookingStatus === "Confirmed"
+                      ? "bg-green-100 text-green-700"
+                      : "bg-orange-100 text-orange-700"
+                  }`}
+                >
+                  {booking.bookingStatus}
+                </span>
+                <button
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  onClick={() => handleViewDetails(booking._id)}
+                >
+                  View Details
                 </button>
-              )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Booking Detail Modal */}
+      {showDetailModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-lg p-6 rounded-xl shadow-lg">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4 flex justify-center">
+              Booking Details
+            </h3>
+            <div className="text-gray-700 space-y-2 text-left">
+              <p>
+                <strong>NAME:</strong> {selectedBooking.username}
+              </p>
+              <p>
+                <strong>AREA:</strong> {selectedBooking.area}
+              </p>
+              <p>
+                <strong>ADDRESS:</strong> {selectedBooking.address || "N/A"}
+              </p>
+              <p>
+                <strong>LEVEL:</strong> {selectedBooking.level}
+              </p>
+              <p>
+                <strong>SLOT:</strong> {selectedBooking.slotNumber}
+              </p>
+              <p>
+                <strong>DATE:</strong> {selectedBooking.dateOfBooking}
+              </p>
+              <p>
+                <strong>TIME:</strong> {selectedBooking.timeOfBooking}
+              </p>
+              <p>
+                <strong>PAYMENT STATUS:</strong>{" "}
+                {selectedBooking.paymentStatus || "Paid"}
+              </p>
+              <p>
+                <strong>BOOKING STATUS:</strong> Confirmed
+              </p>
+            </div>
+            <div className="mt-6 flex space-x-70 flex-row">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={() => {
+                  setShowDetailModal(false);
+                  setSelectedBooking(null);
+                }}
+              >
+                Close
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={() => {
+                  setShowConfirmPopup(true);
+                }}
+              >
+                Cancel Booking
+              </button>
             </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+      {showConfirmPopup && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Are you sure you want to cancel this booking?
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Booking Slot: <strong>{selectedBooking.slotNumber}</strong>
+              <br />
+              Date: <strong>{selectedBooking.dateOfBooking}</strong>
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={() => setShowConfirmPopup(false)}
+              >
+                No
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={() => {
+                  handleConfirmCancel();
+                  setShowConfirmPopup(false);
+                  setShowDetailModal(false);
+                }}
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelModal && selectedBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md p-6 rounded-xl shadow-lg">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Confirm Cancellation
+            </h3>
+            <p className="text-gray-700 mb-6">
+              Are you sure you want to cancel the booking for{" "}
+              <strong>{selectedBooking.slotNumber}</strong> on{" "}
+              <strong>{selectedBooking.dateOfBooking}</strong>?
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setSelectedBooking(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                onClick={handleConfirmCancel}
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
