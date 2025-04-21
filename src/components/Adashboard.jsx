@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Edit as EditIcon, Trash as TrashIcon } from "lucide-react";
+import AdminAreaAdd from "./Adminareaadd"; // Adjust path if needed
+import axios from "axios";
 
 const Adashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -8,13 +11,23 @@ const Adashboard = () => {
   const [activePage, setActivePage] = useState("dashboard");
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null); // New state for selected user
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [areas, setAreas] = useState([]);
 
   const location = useLocation();
   const admin = location.state?.admin;
   const navigate = useNavigate();
 
-  const areas = ["Area 1", "Area 2", "Area 3","Area 4", "Area 5"];
-  const locations = ["Location 1", "Location 2", "Location 3", "Location 4","Location 5","Location 6","Location 7",];
+  const areas1 = ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5"];
+  const locations = [
+    "Location 1",
+    "Location 2",
+    "Location 3",
+    "Location 4",
+    "Location 5",
+    "Location 6",
+    "Location 7",
+  ];
   const recentBookings = [
     {
       user: "John Doe",
@@ -27,48 +40,6 @@ const Adashboard = () => {
       area: "Area 2",
       location: "Location 3",
       time: "9:45 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
-    },
-    {
-      user: "Alex Johnson",
-      area: "Area 3",
-      location: "Location 1",
-      time: "8:15 AM",
     },
   ];
 
@@ -89,114 +60,54 @@ const Adashboard = () => {
       car: "Toyota Corolla",
       photo: "https://via.placeholder.com/100",
     },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-    // Add more users as needed
   ];
 
   const handleInputChange = (e) => setQuery(e.target.value);
+
+  useEffect(() => {
+    fetchAreas();
+  }, []);
+
+  const fetchAreas = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/area/allareas");
+      if (response.data.success) {
+        setAreas(response.data.areas);
+      } else {
+        console.error("Failed to fetch areas");
+      }
+    } catch (error) {
+      console.error("Error fetching areas:", error);
+    }
+  };
+  useEffect(() => {
+    fetchAreas();
+  }, []);
+
+  const handleDeleteArea = async (area) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ${area.areaName}?`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await axios.delete(
+        `http://localhost:5000/area/deletearea/${area._id}`
+      );
+      if (res.data.success) {
+        alert("Area deleted successfully!");
+        fetchAreas(); // refresh UI immediately
+      } else {
+        alert("Failed to delete area.");
+      }
+    } catch (error) {
+      console.error("Delete Error:", error);
+      alert("An error occurred while deleting.");
+    }
+  };
+  useEffect(() => {
+    fetchAreas();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -204,8 +115,20 @@ const Adashboard = () => {
     navigate("/adminlogin");
   };
 
+  const handleAddArea = () => {
+    setShowAddModal(true);
+  };
+
+  const handleModalClose = () => {
+    setShowAddModal(false);
+  };
+
+  const refreshAreas = async () => {
+    const res = await axios.get("http://localhost:5000/area/allareas");
+    setAreas(res.data.areas);
+  };
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const handleDeleteArea = (area) => console.log("Delete", area);
   const handleSelectArea = (area) => setSelectedArea(area);
   const handleSelectLocation = (loc) => setSelectedLocation(loc);
 
@@ -388,6 +311,121 @@ const Adashboard = () => {
             {activePage === "myslots" && (
               <>
                 {!selectedArea && (
+                  <>
+                    {/* Add Area button */}
+                    <div className="flex justify-end mb-4">
+                      <button
+                        onClick={handleAddArea}
+                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                      >
+                        Add Area
+                      </button>
+                    </div>
+
+                    {/* Area cards */}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {areas.map((area) => (
+                        <div
+                          key={area._id}
+                          className="relative bg-gray-100 p-4 rounded-lg shadow hover:shadow-lg cursor-pointer"
+                        >
+                          {/* Modify & Delete Icons */}
+                          <div className="absolute top-2 right-2 flex space-x-2">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditArea(area);
+                              }}
+                            >
+                              <EditIcon className="w-4 h-4 text-blue-600 hover:text-blue-800" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteArea(area); // now it deletes from DB and updates UI
+                              }}
+                            >
+                              <TrashIcon className="w-4 h-4 text-red-600 hover:text-red-800" />
+                            </button>
+                          </div>
+
+                          <div onClick={() => handleSelectArea(area.areaName)}>
+                            <h3 className="text-xl font-semibold text-blue-600">
+                              {area.areaName}
+                            </h3>
+                            <p className="text-gray-600 text-sm mt-1">
+                              {area.address}
+                            </p>
+                            <p className="text-gray-700 text-sm mt-2">
+                              <span className="font-medium">Levels:</span>{" "}
+                              {area.levels}
+                            </p>
+                            <p className="text-gray-700 text-sm">
+                              <span className="font-medium">Slots/Level:</span>{" "}
+                              {area.slotsPerLevel.join(", ")}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+
+                {selectedArea && !selectedLocation && (
+                  <div>
+                    <div className="flex justify-between mb-4">
+                      <button
+                        onClick={() => setSelectedArea(null)}
+                        className="px-4 py-2 bg-yellow-400 text-white rounded"
+                      >
+                        Back
+                      </button>
+                      <button
+                        onClick={resetSelections}
+                        className="px-4 py-2 bg-red-500 text-white rounded"
+                      >
+                        Close
+                      </button>
+                    </div>
+                    <h2 className="text-xl font-bold mb-2">
+                      Locations in {selectedArea}
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {locations.map((loc) => (
+                        <div
+                          key={loc}
+                          className="bg-white border p-4 rounded shadow hover:shadow-md cursor-pointer"
+                          onClick={() => handleSelectLocation(loc)}
+                        >
+                          <h3 className="text-lg font-medium text-blue-700">
+                            {loc}
+                          </h3>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {selectedArea && selectedLocation && renderCards()}
+
+                {/* Show Modal */}
+                {showAddModal && (
+                  <AdminAreaAdd
+                    onClose={handleModalClose}
+                    onAreaAdded={() => {
+                      fetchAreas();
+                      handleModalClose();
+                    }}
+                    // onSuccess={refreshAreas}
+                  />
+                )}
+              </>
+            )}
+
+            {/* {activePage === "myslots" && (
+              <>
+                {!selectedArea && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {areas.map((area) => (
                       <div
@@ -438,7 +476,7 @@ const Adashboard = () => {
                 )}
                 {selectedArea && selectedLocation && renderCards()}
               </>
-            )}
+            )} */}
 
             {activePage === "users" && (
               <>

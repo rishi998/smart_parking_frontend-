@@ -14,6 +14,9 @@ import Choice from './components/Choice.jsx'
 import Alogin from './components/Alogin.jsx'
 import Aregister from './components/Aregister.jsx'
 import Adashboard from './components/Adashboard.jsx'
+import AdminAreaAdd from './components/Adminareaadd.jsx'
+import AdminAreaDelete from './components/Adminareadelete.jsx'
+import AdminAreaModify from './components/Adminareamodify.jsx'
 const App = () => {
   return (
     <div>
@@ -27,11 +30,13 @@ const App = () => {
       <Route path='/verifyotp' element={<VerifyOtp/>}></Route>
       <Route path='/dashboard' element={<Dashboard/>}></Route>
       <Route path='/admindashboard' element={<Adashboard/>}></Route>
-      
       <Route path='/book_parking' element={<Book_parking/>}></Route>
       <Route path='/contact_us' element={<ContactUs/>}></Route>
       <Route path='/mybookings' element={<MyBookings/>}></Route>
       <Route path='/about_us' element={<AboutUs/>}></Route>
+      <Route path='/addarea' element={<AdminAreaAdd/>}></Route>
+      <Route path='/deletearea' element={<AdminAreaDelete/>}></Route>
+      <Route path='/modifyarea' element={<AdminAreaModify/>}></Route>
     </Routes>
     </BrowserRouter>
     </div>
