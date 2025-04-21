@@ -18,31 +18,6 @@ const Adashboard = () => {
   const admin = location.state?.admin;
   const navigate = useNavigate();
 
-  const areas1 = ["Area 1", "Area 2", "Area 3", "Area 4", "Area 5"];
-  const locations = [
-    "Location 1",
-    "Location 2",
-    "Location 3",
-    "Location 4",
-    "Location 5",
-    "Location 6",
-    "Location 7",
-  ];
-  const recentBookings = [
-    {
-      user: "John Doe",
-      area: "Area 1",
-      location: "Location 2",
-      time: "10:30 AM",
-    },
-    {
-      user: "Jane Smith",
-      area: "Area 2",
-      location: "Location 3",
-      time: "9:45 AM",
-    },
-  ];
-
   const usersData = [
     {
       name: "Alice Parker",
