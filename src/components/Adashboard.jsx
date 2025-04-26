@@ -4,12 +4,14 @@ import { Edit as EditIcon, Trash as TrashIcon } from "lucide-react";
 import AdminAreaAdd from "./Adminareaadd"; // Adjust path if needed
 import AdminAreaModify from "./Adminareamodify";
 import axios from "axios";
+import { Eye as EyeIcon, CheckCircle as CheckCircleIcon} from 'lucide-react';
 
 const Adashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [showModify, setShowModify] = useState(false);
+  const [users, setUsers] = useState([]);
 
   const [activePage, setActivePage] = useState("dashboard");
   const [query, setQuery] = useState("");
@@ -64,6 +66,39 @@ const Adashboard = () => {
     fetchAreas();
   }, []);
 
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/auth/getallusers/users');
+        setUsers(res.data.users);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+      }
+    };
+    fetchUsers();
+  }, []);
+  const handleViewUser = (user) => setSelectedUser(user);
+
+const handleVerifyUser = async (userId) => {
+  try {
+    await axios.patch(`http://localhost:5000/auth/getallusers/users/verify/${userId}`);
+    setUsers(users.map(u => u._id === userId ? {...u, isVerified: true} : u));
+  } catch (err) {
+    console.error('Error verifying user:', err);
+  }
+};
+
+const handleDeleteUser = async (userId) => {
+  if (window.confirm('Are you sure you want to delete this user?')) {
+    try {
+      await axios.delete(`http://localhost:5000/auth/getallusers/users/${userId}`);
+      setUsers(users.filter(u => u._id !== userId));
+    } catch (err) {
+      console.error('Error deleting user:', err);
+    }
+  }
+};
+  
   const handleDeleteArea = async (area) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${area.areaName}?`
@@ -94,7 +129,7 @@ const Adashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("admin");
-    navigate("/adminlogin",{state:null,replace:true});
+    navigate("/adminlogin", { state: null, replace: true });
     window.location.reload();
   };
 
@@ -103,12 +138,12 @@ const Adashboard = () => {
   };
 
   const handleEditArea = () => {
-    navigate('/modifyarea',{ state: { admin} })
+    navigate("/modifyarea", { state: { admin } });
   };
   const handleModalClose = () => {
     setShowAddModal(false);
   };
-  
+
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const handleSelectArea = (area) => setSelectedArea(area);
   const handleSelectLocation = (loc) => setSelectedLocation(loc);
@@ -331,11 +366,16 @@ const Adashboard = () => {
                               {area.address}
                             </p>
                             <p className="text-gray-700 text-sm mt-2">
-                              <span className="font-medium"> No. of Levels:</span>{" "}
+                              <span className="font-medium">
+                                {" "}
+                                No. of Levels:
+                              </span>{" "}
                               {area.levels}
                             </p>
                             <p className="text-gray-700 text-sm">
-                              <span className="font-medium">Slots per level:</span>{" "}
+                              <span className="font-medium">
+                                Slots per level:
+                              </span>{" "}
                               {area.slotsPerLevel.join(", ")}
                             </p>
                           </div>
@@ -361,7 +401,7 @@ const Adashboard = () => {
                   </div>
                 )}
 
-                {/* {selectedArea && !selectedLocation && (
+                {selectedArea && !selectedLocation && (
                   <div>
                     <div className="flex justify-between mb-4">
                       <button
@@ -394,42 +434,7 @@ const Adashboard = () => {
                       ))}
                     </div>
                   </div>
-                )} */}
-
-{selectedArea && !selectedLocation && (
-  <div>
-    <div className="flex justify-between mb-4">
-      <button
-        onClick={() => setSelectedArea(null)}
-        className="px-4 py-2 bg-yellow-400 text-white rounded"
-      >
-        Back
-      </button>
-      <button
-        onClick={resetSelections}
-        className="px-4 py-2 bg-red-500 text-white rounded"
-      >
-        Close
-      </button>
-    </div>
-    <h2 className="text-xl font-bold mb-2">
-      Locations in {selectedArea.areaName}
-    </h2>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {locations.map((loc) => (
-        <div
-          key={loc}
-          className="bg-white border p-4 rounded shadow hover:shadow-md cursor-pointer"
-          onClick={() => handleSelectLocation(loc)}
-        >
-          <h3 className="text-lg font-medium text-blue-700">
-            {loc}
-          </h3>
-        </div>
-      ))}
-    </div>
-  </div>
-)}
+                )}
                 {selectedArea && selectedLocation && renderCards()}
 
                 {/* Show Modal */}
@@ -528,27 +533,149 @@ const Adashboard = () => {
                 })()}
               </div>
             )}
+            {activePage === "managebookings" && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Registered Users
+                  </h2>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search users..."
+                      className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <svg
+                      className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
 
-            {activePage === "recentbookings" && (
-              <div className="space-y-6">
-                {recentBookings.map((booking, idx) => (
-                  <div
-                    key={idx}
-                    className="relative bg-gradient-to-r from-blue-100 to-blue-200 p-6 rounded-lg shadow transform rotate-1"
-                  >
-                    <div className="border-l-8 border-blue-500 pl-4">
-                      <p className="text-gray-800 font-semibold">
-                        <span className="text-blue-700">{booking.user}</span>{" "}
-                        made a booking at{" "}
-                        <span className="text-blue-700">{booking.area}</span> on{" "}
-                        <span className="text-blue-700">
-                          {booking.location}
-                        </span>{" "}
-                        at <span className="text-blue-700">{booking.time}</span>
-                      </p>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                    <thead className="bg-gray-100 text-gray-700">
+                      <tr>
+                        <th className="py-3 px-4 text-left">ID</th>
+                        <th className="py-3 px-4 text-left">Name</th>
+                        <th className="py-3 px-4 text-left">Email</th>
+                        <th className="py-3 px-4 text-left">Phone</th>
+                        <th className="py-3 px-4 text-left">Verified</th>
+                        <th className="py-3 px-4 text-left">Joined</th>
+                        <th className="py-3 px-4 text-left">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {users.map((user) => (
+                        <tr key={user._id} className="hover:bg-gray-50">
+                          <td className="py-4 px-4">{user.id}</td>
+                          <td className="py-4 px-4 font-medium">{user.name}</td>
+                          <td className="py-4 px-4">{user.email}</td>
+                          <td className="py-4 px-4">{user.phone}</td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs ${
+                                user.isVerified
+                                  ? "bg-green-100 text-green-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {user.isVerified ? "Verified" : "Not Verified"}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            {new Date(user.createdAt).toLocaleDateString()}
+                          </td>
+                          <td className="py-4 px-4">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleViewUser(user)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                title="View Details"
+                              >
+                                <EyeIcon className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleVerifyUser(user._id)}
+                                className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                title="Verify User"
+                              >
+                                <CheckCircleIcon className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteUser(user._id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                title="Delete User"
+                              >
+                                <TrashIcon className="w-5 h-5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* User Detail Modal */}
+                {selectedUser && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-xl font-bold">User Details</h3>
+                        <button
+                          onClick={() => setSelectedUser(null)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-gray-600">Name:</p>
+                          <p className="font-medium">{selectedUser.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Email:</p>
+                          <p className="font-medium">{selectedUser.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Phone:</p>
+                          <p className="font-medium">{selectedUser.phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Status:</p>
+                          <p
+                            className={`font-medium ${
+                              selectedUser.isVerified
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {selectedUser.isVerified
+                              ? "Verified"
+                              : "Not Verified"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Joined On:</p>
+                          <p className="font-medium">
+                            {new Date(selectedUser.createdAt).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
