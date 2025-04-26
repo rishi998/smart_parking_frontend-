@@ -1,68 +1,71 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom"; // Assuming React Router for navigation
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const BookParking = () => {
-  const TOTAL_SLOTS = 20;
-  const parkingAreas = [
-    {
-      id: 1,
-      name: "Central Delhi",
-      address: "Connaught Place, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3"],
-    },
-    {
-      id: 2,
-      name: "North Delhi",
-      address: "Kamla Nagar, Delhi",
-      levels: ["Level 1", "Level 2"],
-    },
-    {
-      id: 3,
-      name: "South Delhi",
-      address: "Saket, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3", "Level 4"],
-    },
-    {
-      id: 4,
-      name: "East Delhi",
-      address: "Laxmi Nagar, Delhi",
-      levels: ["Level 1", "Level 2"],
-    },
-    {
-      id: 5,
-      name: "West Delhi",
-      address: "Rajouri Garden, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3"],
-    },
-  ];
-
-  const createSpots = () =>
-    Array.from({ length: TOTAL_SLOTS }, (_, i) => ({
-      id: `Spot ${i + 1}`,
-      status: "available",
-    }));
-
+  const [parkingAreas, setParkingAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
-  const [selectedLevel, setSelectedLevel] = useState("");
+  const [selectedLevelIndex, setSelectedLevelIndex] = useState(null);
   const [selectedSpot, setSelectedSpot] = useState("");
-  const [selectedAddress, setSelectedAddress] = useState("");
-  const [selectedDate, setSelectedDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState("");
   const [bookingStatus, setBookingStatus] = useState("");
   const [confirmationDetails, setConfirmationDetails] = useState(null);
-  const [parkingSpots, setParkingSpots] = useState(createSpots());
+  const [parkingSpots, setParkingSpots] = useState([]);
   const [userBooking, setUserBooking] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState([]);
 
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
+
+  // Fetch parking areas on component mount
+  useEffect(() => {
+    const fetchParkingAreas = async () => {
+      try {
+        const res = await axios.get("http://localhost:5000/area/allareas");
+        setParkingAreas(res.data.areas || []);
+      } catch (err) {
+        console.error("Error fetching parking areas:", err);
+      }
+    };
+    fetchParkingAreas();
+  }, []);
+
+  // Generate parking spots when level is selected
+  useEffect(() => {
+    if (selectedLevelIndex !== null && selectedArea) {
+      const fetchBookedSlots = async () => {
+        try {
+          const level = `Level ${selectedLevelIndex + 1}`;
+          const res = await axios.get(
+            `http://localhost:5000/bookings/booked-slots/${
+              selectedArea._id
+            }/${encodeURIComponent(level)}`
+          );
+          setBookedSlots(res.data.bookedSlots || []);
+          console.log(res.data.bookedSlots);
+        } catch (err) {
+          console.error("Error fetching booked slots:", err);
+          setBookedSlots([]);
+        }
+      };
+      fetchBookedSlots();
+
+      // Generate spots UI
+      const slotsCount = selectedArea.slotsPerLevel[selectedLevelIndex] || 0;
+      const spots = Array.from({ length: slotsCount }, (_, i) => ({
+        id: `Spot ${i + 1}`,
+        status: "available",
+      }));
+      setParkingSpots(spots);
+    }
+  }, [selectedLevelIndex, selectedArea]);
 
   const resetAllInputs = () => {
     setSelectedSpot("");
-    setSelectedAddress("");
     setSelectedDate("");
     setSelectedTime("");
     setSelectedArea(null);
-    setSelectedLevel("");
+    setSelectedLevelIndex(null);
     setConfirmationDetails(null);
     setBookingStatus("");
   };
@@ -73,12 +76,15 @@ const BookParking = () => {
   };
 
   const handleSpotSelect = (spot) => {
-    setSelectedSpot(spot.id);
+    if (spot.status === "available") {
+      setSelectedSpot(spot.id);
+    }
   };
+
   const handleBooking = async () => {
     if (
       !selectedArea ||
-      !selectedLevel ||
+      selectedLevelIndex === null ||
       !selectedSpot ||
       !selectedDate ||
       !selectedTime
@@ -86,58 +92,50 @@ const BookParking = () => {
       setBookingStatus("Please fill all the details!");
       return;
     }
-  
-    const updatedSpots = parkingSpots.map((spot) =>
-      spot.id === selectedSpot ? { ...spot, status: "booked" } : spot
-    );
-    setParkingSpots(updatedSpots);
-  
+
     const details = {
-      username:localStorage.getItem("user"),
-      area: selectedArea.name,
-      address: selectedAddress.address,
-      level: selectedLevel,
+      username: localStorage.getItem("user"),
+      area: selectedArea.areaName,
+      address: selectedArea.address,
+      level: `Level ${selectedLevelIndex + 1}`,
       slotNumber: selectedSpot,
       dateOfBooking: selectedDate,
       timeOfBooking: selectedTime,
       accessToken: crypto.randomUUID(),
+      areaId: selectedArea._id, // Add area ID to the request
     };
-  
+
     try {
       const response = await axios.post(
         "http://localhost:5000/bookings/book",
         details
       );
-  
+
       if (response.data.success) {
         const savedBooking = response.data.booking;
-  
+
         setConfirmationDetails({
           ...details,
           _id: savedBooking._id,
         });
-  
+
+        // Update the spot status in UI
+        const updatedSpots = parkingSpots.map((spot) =>
+          spot.id === selectedSpot ? { ...spot, status: "booked" } : spot
+        );
+        setParkingSpots(updatedSpots);
+
         setBookingStatus("Booking successful!");
+        setUserBooking(selectedSpot);
+
+        alert(`Booking confirmed for ${details.slotNumber} at ${details.area}`);
       } else {
         setBookingStatus("Failed to save booking. Try again later.");
-        return;
       }
     } catch (err) {
       console.error("Error booking:", err);
       setBookingStatus("Failed to save booking. Try again later.");
-      return;
     }
-  
-    setUserBooking(selectedSpot);
-  
-    alert(`Booking confirmed for ${details.slotNumber} at ${details.area}`);
-  
-    setSelectedSpot("");
-    setSelectedDate("");
-    setSelectedTime("");
-    setSelectedArea(null);
-    setSelectedAddress("");
-    setSelectedLevel("");
   };
 
   const handleCancelBooking = async () => {
@@ -145,12 +143,12 @@ const BookParking = () => {
       setBookingStatus("No active booking found to cancel.");
       return;
     }
-  
+
     try {
       const response = await axios.delete(
         `http://localhost:5000/bookings/cancel/${confirmationDetails._id}`
       );
-  
+
       if (response.data.success) {
         const updatedSpots = parkingSpots.map((spot) =>
           spot.id === confirmationDetails.slotNumber
@@ -158,7 +156,7 @@ const BookParking = () => {
             : spot
         );
         setParkingSpots(updatedSpots);
-  
+
         alert(`${confirmationDetails.slotNumber} booking has been cancelled.`);
         resetAllInputs();
         setUserBooking(null);
@@ -170,12 +168,11 @@ const BookParking = () => {
       setBookingStatus("Error while cancelling booking.");
     }
   };
-  
 
   return (
     <div className="relative flex items-center justify-center bg-[url('/src/assets/images/parking.jpg')] bg-cover bg-center min-h-screen text-white">
       <div className="absolute inset-0 bg-black opacity-40 backdrop-blur-md"></div>
-      <div className="relative z-10 max-w-4xl mx-auto p-8 backdrop-blur rounded-lg shadow-xl text-center mt-10 w-full">
+      <div className="relative z-10 max-w-4xl mx-auto p-8 backdrop-blur rounded-lg shadow-xl text-center w-full bg-red-400">
         <h2 className="text-3xl font-bold mb-4">Book Your Parking Spot</h2>
 
         {/* Back Button */}
@@ -198,127 +195,140 @@ const BookParking = () => {
             />
           </svg>
         </button>
-
         <div className="flex space-x-4 mb-6">
           <div className="w-full">
-            <label className="block font-semibold mb-2">
-              Select Parking Area
-            </label>
+            <label className="block font-semibold mb-2">Parking Area</label>
             <select
-              value={selectedArea ? selectedArea.id : ""}
+              value={selectedArea ? selectedArea._id : ""}
               onChange={(e) => {
                 const selected = parkingAreas.find(
-                  (area) => area.id === parseInt(e.target.value)
+                  (area) => area._id === e.target.value
                 );
-                setSelectedAddress(selected);
                 setSelectedArea(selected);
-                setSelectedLevel("");
-                setParkingSpots(createSpots());
+                setSelectedLevelIndex(null);
+                setSelectedSpot("");
               }}
               className="text-white p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 w-full"
             >
-              <option value="">Select Area</option>
+              <option value="">Select</option>
               {parkingAreas.map((area) => (
-                <option key={area.id} value={area.id} className="text-black">
-                  {area.name} - {area.address}
+                <option key={area._id} value={area._id} className="text-black">
+                  {area.areaName} - {area.address}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="w-full">
-            <label className="block font-semibold mb-2">Select Level</label>
+            <label className="block font-semibold mb-2">Level</label>
             <select
-              value={selectedLevel}
-              onChange={(e) => setSelectedLevel(e.target.value)}
+              value={selectedLevelIndex !== null ? selectedLevelIndex : ""}
+              onChange={(e) => {
+                setSelectedLevelIndex(Number(e.target.value));
+                setSelectedSpot("");
+              }}
               className="text-white p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 w-full"
               disabled={!selectedArea}
             >
-              <option value="">Select Level</option>
+              <option value="">Select</option>
               {selectedArea &&
-                selectedArea.levels.map((level, index) => (
-                  <option key={index} value={level} className="text-black">
-                    {level}
+                selectedArea.slotsPerLevel.map((slots, index) => (
+                  <option key={index} value={index} className="text-black">
+                    Level {index + 1} ({slots} slots)
                   </option>
                 ))}
             </select>
           </div>
+          <div className="flex flex-col sm:flex-row justify-between gap-4 mt-7">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="text-white border-2 pr-2 pl-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 text-lg"
+            />
+            <input
+              type="time"
+              value={selectedTime}
+              onChange={(e) => setSelectedTime(e.target.value)}
+              className="text-white border-2 pr-2 pl-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 text-lg"
+            />
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
-          {parkingSpots.map((spot) => (
-            <div
-              key={spot.id}
-              className={`w-full h-24 flex flex-col items-center justify-center text-lg font-semibold rounded-lg border-2 transition-all duration-300 text-center cursor-pointer transform ${
-                spot.status === "booked"
-                  ? "bg-gray-300 text-gray-600"
-                  : selectedSpot === spot.id
-                  ? "bg-green-600 text-white border-green-700 scale-110"
-                  : "bg-blue-400 text-white hover:bg-blue-500 hover:scale-105"
-              }`}
-              onClick={() => handleSpotSelect(spot)}
-            >
-              {spot.id}
-              {spot.status === "booked" && (
-                <span className="block text-xs text-red-600 mt-1">Booked</span>
+        {/* {selectedLevelIndex !== null && ( */}
+        {selectedDate !== null && (
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+              {parkingSpots.length > 0 ? (
+                parkingSpots.map((spot) => {
+                  const isBooked =
+                    bookedSlots.includes(spot.id) || spot.status === "booked";
+                  return (
+                    <div
+                      key={spot.id}
+                      className={`w-full h-24 flex flex-col items-center justify-center text-lg font-semibold rounded-lg border-2 transition-all duration-300 text-center ${
+                        isBooked
+                          ? "bg-red-500 text-white cursor-not-allowed"
+                          : selectedSpot === spot.id
+                          ? "bg-green-600 text-white scale-110"
+                          : "bg-blue-400 text-white hover:bg-blue-500 cursor-pointer"
+                      }`}
+                      onClick={() => !isBooked && handleSpotSelect(spot)}
+                    >
+                      {spot.id}
+                      {isBooked && (
+                        <span className="text-xs mt-1 text-white">Booked</span>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-4">
+                  No parking spots available for this level
+                </div>
               )}
             </div>
-          ))}
-        </div>
 
-        <div className="flex flex-col sm:flex-row justify-between gap-4 mb-6">
-          <input
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="text-white p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 text-lg"
-          />
-          <input
-            type="time"
-            value={selectedTime}
-            onChange={(e) => setSelectedTime(e.target.value)}
-            className="text-white p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 text-lg"
-          />
-        </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <button
+                className={`w-full py-3 px-5 font-semibold rounded-lg transition-all duration-300 ${
+                  !selectedArea ||
+                  selectedLevelIndex === null ||
+                  !selectedSpot ||
+                  !selectedDate ||
+                  !selectedTime
+                    ? "bg-green-200 cursor-not-allowed"
+                    : "bg-green-700 hover:bg-green-800"
+                }`}
+                disabled={
+                  !selectedArea ||
+                  selectedLevelIndex === null ||
+                  !selectedSpot ||
+                  !selectedDate ||
+                  !selectedTime
+                }
+                onClick={handleBooking}
+              >
+                Book Spot
+              </button>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <button
-            className={`w-full py-3 px-5 font-semibold rounded-lg transition-all duration-300 ${
-              !selectedArea ||
-              !selectedLevel ||
-              !selectedSpot ||
-              !selectedDate ||
-              !selectedTime
-                ? "bg-green-200 cursor-not-allowed"
-                : "bg-green-700 hover:bg-green-800"
-            }`}
-            disabled={
-              !selectedArea ||
-              !selectedLevel ||
-              !selectedSpot ||
-              !selectedDate ||
-              !selectedTime
-            }
-            onClick={handleBooking}
-          >
-            Book Spot
-          </button>
+              <button
+                className="w-full py-3 px-5 font-semibold rounded-lg bg-yellow-600 hover:bg-yellow-700"
+                onClick={resetAllInputs}
+              >
+                Reset
+              </button>
+            </div>
 
-          <button
-            className="w-full py-3 px-5 font-semibold rounded-lg bg-yellow-600 hover:bg-yellow-700"
-            onClick={resetAllInputs}
-          >
-            Reset
-          </button>
-        </div>
-
-        {userBooking && (
-          <button
-            className="w-full py-3 px-5 font-semibold rounded-lg bg-red-600 hover:bg-red-700 mt-4"
-            onClick={handleCancelBooking}
-          >
-            Cancel Booking
-          </button>
+            {userBooking && (
+              <button
+                className="w-full py-3 px-5 font-semibold rounded-lg bg-red-600 hover:bg-red-700 mt-4"
+                onClick={handleCancelBooking}
+              >
+                Cancel Booking
+              </button>
+            )}
+          </>
         )}
 
         {confirmationDetails && (
@@ -326,25 +336,28 @@ const BookParking = () => {
             <h3 className="text-xl font-bold mb-2">Booking Details:</h3>
             <ul className="list-disc pl-6">
               <li>
-                <strong>User :</strong> {localStorage.getItem("user")}
+                <strong>User:</strong> {confirmationDetails.username}
               </li>
               <li>
-                <strong>Spot :</strong> {confirmationDetails.slotNumber}
+                <strong>Spot:</strong> {confirmationDetails.slotNumber}
               </li>
               <li>
-                <strong>Area :</strong> {confirmationDetails.area}
+                <strong>Area:</strong> {confirmationDetails.area}
               </li>
               <li>
-                <strong>Address :</strong> {confirmationDetails.address}
+                <strong>Address:</strong> {confirmationDetails.address}
               </li>
               <li>
-                <strong>Level :</strong> {confirmationDetails.level}
+                <strong>Level:</strong> {confirmationDetails.level}
               </li>
               <li>
-                <strong>Date :</strong> {confirmationDetails.dateOfBooking}
+                <strong>Date:</strong> {confirmationDetails.dateOfBooking}
               </li>
               <li>
-                <strong>Time :</strong> {confirmationDetails.timeOfBooking}
+                <strong>Time:</strong> {confirmationDetails.timeOfBooking}
+              </li>
+              <li>
+                <strong>Access Token:</strong> {confirmationDetails.accessToken}
               </li>
             </ul>
           </div>

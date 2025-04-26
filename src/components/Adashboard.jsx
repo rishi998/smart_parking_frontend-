@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, replace } from "react-router-dom";
 import { Edit as EditIcon, Trash as TrashIcon } from "lucide-react";
 import AdminAreaAdd from "./Adminareaadd"; // Adjust path if needed
+import AdminAreaModify from "./Adminareamodify";
 import axios from "axios";
 
 const Adashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [showModify, setShowModify] = useState(false);
+
   const [activePage, setActivePage] = useState("dashboard");
   const [query, setQuery] = useState("");
   const [selectedUser, setSelectedUser] = useState(null); // New state for selected user
@@ -17,6 +20,7 @@ const Adashboard = () => {
   const location = useLocation();
   const admin = location.state?.admin;
   const navigate = useNavigate();
+  const locations = selectedArea?.locations || [];
 
   const usersData = [
     {
@@ -36,13 +40,14 @@ const Adashboard = () => {
       photo: "https://via.placeholder.com/100",
     },
   ];
+  const [formData, setFormData] = useState({
+    areaName: "",
+    address: "",
+    levels: 1,
+    slotsPerLevel: [""],
+  });
 
   const handleInputChange = (e) => setQuery(e.target.value);
-
-  useEffect(() => {
-    fetchAreas();
-  }, []);
-
   const fetchAreas = async () => {
     try {
       const response = await axios.get("http://localhost:5000/area/allareas");
@@ -80,29 +85,30 @@ const Adashboard = () => {
       alert("An error occurred while deleting.");
     }
   };
-  useEffect(() => {
-    fetchAreas();
-  }, []);
+
+  const handleCloseModal = () => {
+    setShowModify(false);
+    setSelectedArea(null);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("admin");
-    navigate("/adminlogin");
+    navigate("/adminlogin",{state:null,replace:true});
+    window.location.reload();
   };
 
   const handleAddArea = () => {
     setShowAddModal(true);
   };
 
+  const handleEditArea = () => {
+    navigate('/modifyarea',{ state: { admin} })
+  };
   const handleModalClose = () => {
     setShowAddModal(false);
   };
-
-  const refreshAreas = async () => {
-    const res = await axios.get("http://localhost:5000/area/allareas");
-    setAreas(res.data.areas);
-  };
-
+  
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
   const handleSelectArea = (area) => setSelectedArea(area);
   const handleSelectLocation = (loc) => setSelectedLocation(loc);
@@ -119,7 +125,7 @@ const Adashboard = () => {
         <h3 className="text-lg font-semibold text-blue-700 mb-2">Location</h3>
         <p className="text-gray-700">
           {selectedArea && selectedLocation
-            ? `${selectedArea} - ${selectedLocation}`
+            ? `${selectedArea.areaName} - ${selectedLocation}`
             : "Select an area and location"}
         </p>
       </div>
@@ -169,27 +175,21 @@ const Adashboard = () => {
           </button>
           <button
             className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
-            onClick={() => setActivePage("myslots")}
+            onClick={() => setActivePage("managebookings")}
           >
-            My Slots
+            Manage Bookings
           </button>
           <button
             className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
-            onClick={() => setActivePage("users")}
+            onClick={() => setActivePage("manageusers")}
           >
-            Users
+            Manage Users
           </button>
           <button
             className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
-            onClick={() => setActivePage("charts")}
+            onClick={() => setActivePage("manageareas")}
           >
-            Charts
-          </button>
-          <button
-            className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
-            onClick={() => setActivePage("recent")}
-          >
-            Recent Bookings
+            Manage Areas
           </button>
           <button
             className="mt-4 bg-blue-600 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded w-full"
@@ -224,13 +224,13 @@ const Adashboard = () => {
         <section className="text-center pt-32 pb-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
           <div className="flex flex-row space-x-4 justify-center">
             <button
-              onClick={() => setActivePage("myslots")}
+              onClick={() => setActivePage("manageareas")}
               className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
             >
               My Areas
             </button>
             <button
-              onClick={() => setActivePage("recent")}
+              onClick={() => setActivePage("managebookings")}
               className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
             >
               Recent Bookings
@@ -283,17 +283,23 @@ const Adashboard = () => {
               </>
             )}
 
-            {activePage === "myslots" && (
+            {activePage === "manageareas" && (
               <>
                 {!selectedArea && (
                   <>
                     {/* Add Area button */}
-                    <div className="flex justify-end mb-4">
+                    <div className="flex justify-end mb-4 space-x-6">
                       <button
                         onClick={handleAddArea}
                         className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
                       >
                         Add Area
+                      </button>
+                      <button
+                        onClick={handleEditArea}
+                        className="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                      >
+                        Modify Area
                       </button>
                     </div>
 
@@ -305,16 +311,8 @@ const Adashboard = () => {
                           key={area._id}
                           className="relative bg-gray-100 p-4 rounded-lg shadow hover:shadow-lg cursor-pointer"
                         >
-                          {/* Modify & Delete Icons */}
+                          {/* Delete Icon */}
                           <div className="absolute top-2 right-2 flex space-x-2">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditArea(area);
-                              }}
-                            >
-                              <EditIcon className="w-4 h-4 text-blue-600 hover:text-blue-800" />
-                            </button>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -325,7 +323,7 @@ const Adashboard = () => {
                             </button>
                           </div>
 
-                          <div onClick={() => handleSelectArea(area.areaName)}>
+                          <div onClick={() => handleSelectArea(area)}>
                             <h3 className="text-xl font-semibold text-blue-600">
                               {area.areaName}
                             </h3>
@@ -333,11 +331,11 @@ const Adashboard = () => {
                               {area.address}
                             </p>
                             <p className="text-gray-700 text-sm mt-2">
-                              <span className="font-medium">Levels:</span>{" "}
+                              <span className="font-medium"> No. of Levels:</span>{" "}
                               {area.levels}
                             </p>
                             <p className="text-gray-700 text-sm">
-                              <span className="font-medium">Slots/Level:</span>{" "}
+                              <span className="font-medium">Slots per level:</span>{" "}
                               {area.slotsPerLevel.join(", ")}
                             </p>
                           </div>
@@ -346,8 +344,24 @@ const Adashboard = () => {
                     </div>
                   </>
                 )}
+                {showModify && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-4xl relative">
+                      <button
+                        onClick={() => setShowModify(false)}
+                        className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                      >
+                        ✕
+                      </button>
+                      <AdminAreaModify
+                        selectedArea={selectedArea}
+                        onClose={handleCloseModal}
+                      />
+                    </div>
+                  </div>
+                )}
 
-                {selectedArea && !selectedLocation && (
+                {/* {selectedArea && !selectedLocation && (
                   <div>
                     <div className="flex justify-between mb-4">
                       <button
@@ -364,7 +378,7 @@ const Adashboard = () => {
                       </button>
                     </div>
                     <h2 className="text-xl font-bold mb-2">
-                      Locations in {selectedArea}
+                      Locations in {selectedArea.areaName}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {locations.map((loc) => (
@@ -380,8 +394,42 @@ const Adashboard = () => {
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
 
+{selectedArea && !selectedLocation && (
+  <div>
+    <div className="flex justify-between mb-4">
+      <button
+        onClick={() => setSelectedArea(null)}
+        className="px-4 py-2 bg-yellow-400 text-white rounded"
+      >
+        Back
+      </button>
+      <button
+        onClick={resetSelections}
+        className="px-4 py-2 bg-red-500 text-white rounded"
+      >
+        Close
+      </button>
+    </div>
+    <h2 className="text-xl font-bold mb-2">
+      Locations in {selectedArea.areaName}
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {locations.map((loc) => (
+        <div
+          key={loc}
+          className="bg-white border p-4 rounded shadow hover:shadow-md cursor-pointer"
+          onClick={() => handleSelectLocation(loc)}
+        >
+          <h3 className="text-lg font-medium text-blue-700">
+            {loc}
+          </h3>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
                 {selectedArea && selectedLocation && renderCards()}
 
                 {/* Show Modal */}
@@ -392,66 +440,10 @@ const Adashboard = () => {
                       fetchAreas();
                       handleModalClose();
                     }}
-                    // onSuccess={refreshAreas}
                   />
                 )}
               </>
             )}
-
-            {/* {activePage === "myslots" && (
-              <>
-                {!selectedArea && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {areas.map((area) => (
-                      <div
-                        key={area}
-                        className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-lg cursor-pointer"
-                        onClick={() => handleSelectArea(area)}
-                      >
-                        <h3 className="text-xl font-semibold text-blue-600">
-                          {area}
-                        </h3>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {selectedArea && !selectedLocation && (
-                  <div>
-                    <div className="flex justify-between mb-4">
-                      <button
-                        onClick={() => setSelectedArea(null)}
-                        className="px-4 py-2 bg-yellow-400 text-white rounded"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={resetSelections}
-                        className="px-4 py-2 bg-red-500 text-white rounded"
-                      >
-                        Close
-                      </button>
-                    </div>
-                    <h2 className="text-xl font-bold mb-2">
-                      Locations in {selectedArea}
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {locations.map((loc) => (
-                        <div
-                          key={loc}
-                          className="bg-white border p-4 rounded shadow hover:shadow-md cursor-pointer"
-                          onClick={() => handleSelectLocation(loc)}
-                        >
-                          <h3 className="text-lg font-medium text-blue-700">
-                            {loc}
-                          </h3>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {selectedArea && selectedLocation && renderCards()}
-              </>
-            )} */}
 
             {activePage === "users" && (
               <>
@@ -537,7 +529,7 @@ const Adashboard = () => {
               </div>
             )}
 
-            {activePage === "recent" && (
+            {activePage === "recentbookings" && (
               <div className="space-y-6">
                 {recentBookings.map((booking, idx) => (
                   <div

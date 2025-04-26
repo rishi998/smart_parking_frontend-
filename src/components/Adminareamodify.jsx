@@ -1,15 +1,60 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+
+  const parkingAreas = [
+    {
+      id: 1,
+      name: "Central Delhi",
+      address: "Connaught Place, Delhi",
+      levels: ["Level 1", "Level 2", "Level 3"],
+    },
+    {
+      id: 2,
+      name: "North Delhi",
+      address: "Kamla Nagar, Delhi",
+      levels: ["Level 1", "Level 2"],
+    },
+    {
+      id: 3,
+      name: "South Delhi",
+      address: "Saket, Delhi",
+      levels: ["Level 1", "Level 2", "Level 3", "Level 4"],
+    },
+    {
+      id: 4,
+      name: "East Delhi",
+      address: "Laxmi Nagar, Delhi",
+      levels: ["Level 1", "Level 2"],
+    },
+    {
+      id: 5,
+      name: "West Delhi",
+      address: "Rajouri Garden, Delhi",
+      levels: ["Level 1", "Level 2", "Level 3"],
+    },
+  ];
+
 
 const AdminAreaModify = () => {
   const [areas, setAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
+  const location = useLocation();
+  const admin = location.state?.admin;
+
+  if(admin==null){
+    <h4>Plese Log in First</h4>
+  }
+
   const [formData, setFormData] = useState({
     areaName: '',
     address: '',
     levels: 1,
     slotsPerLevel: ['']
   });
+
+  const navigate = useNavigate(); // Hook for navigating to different routes
 
   const fetchAreas = async () => {
     try {
@@ -101,6 +146,14 @@ const AdminAreaModify = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white shadow-lg rounded-2xl p-6 w-full max-w-3xl">
         <h2 className="text-2xl font-semibold mb-6 text-center">Modify Parking Area</h2>
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/admindashboard',{ state: { admin } })}
+          className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-xl mb-4"
+        >
+          Back to Dashboard
+        </button>
 
         {!selectedArea ? (
           <ul>

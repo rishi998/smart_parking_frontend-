@@ -28,6 +28,7 @@ const MyBookings = () => {
           `http://localhost:5000/bookings/${username}`
         );
         setBookings(res.data.bookings);
+        console.log(res.data.bookings)
       } catch (err) {
         console.error(err);
         setError("Failed to fetch bookings.");
@@ -114,11 +115,11 @@ const MyBookings = () => {
       {bookings.length === 0 ? (
         <p className="text-center text-gray-500">No bookings found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-amber-300 p-3 rounded-2xl">
           {bookings.map((booking) => (
             <div
               key={booking._id}
-              className="bg-white p-6 rounded-lg shadow-md"
+              className="bg-blue-400 p-6 rounded-lg shadow-md"
             >
               <h3 className="text-xl font-semibold text-gray-800 mb-2">
                 {booking.area}
@@ -127,17 +128,18 @@ const MyBookings = () => {
                 <strong>Address:</strong> {booking.address || "N/A"}
               </p>
               <p className="text-gray-600 mb-1">
-                <strong>Level:</strong> {booking.level}
+                <strong>{booking.level}</strong>
               </p>
               <div className="flex justify-between items-center mt-4">
                 <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    booking.bookingStatus === "Confirmed"
+                  className={`px-2 py-1 rounded-full text-md font-medium ${
+                    booking.bookingStatus != "Confirmed"
                       ? "bg-green-100 text-green-700"
                       : "bg-orange-100 text-orange-700"
                   }`}
                 >
-                  {booking.bookingStatus}
+                  {/* {booking.bookingStatus} */}
+                  Confirmed
                 </span>
                 <button
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
