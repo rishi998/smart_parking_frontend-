@@ -1,14 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion"; // For smooth animations
 
 const BASE_URL = "http://localhost:5000";
 
 const Login = () => {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
   const [err, setErr] = useState(null);
 
   const navigate = useNavigate();
@@ -22,32 +20,28 @@ const Login = () => {
     }
     try {
       console.log("Sending request to login...");
-      const response = await axios.post(`${BASE_URL}/auth/login`, {
-        email,
-      });
-      // response.data && response.data.accessToken
+      const response = await axios.post(`${BASE_URL}/auth/login`, { email });
 
       if (response) {
-        navigate("/verifyotp");
         localStorage.setItem("token", response.data.accessToken);
+        navigate("/verifyotp");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error("Error during login:", error);
 
       const errorMsg =
-        error.response && error.response.data && error.response.data.message
+        error.response && error.response.data?.message
           ? error.response.data.message
           : "An unexpected error occurred. Please try again.";
 
       if (error.response && error.response.status === 404) {
-        navigate('/login')
-        const errorMsg = "Email address does not exist. Please register.";
+        navigate("/login");
       }
       setErr(errorMsg);
     }
   };
 
-  const handleclick = () => {
+  const handleRegisterRedirect = () => {
     navigate("/register");
   };
 
@@ -58,46 +52,56 @@ const Login = () => {
   }
 
   return (
-    <>
-      {/* <p className="">SMART CAR PARKING</p> */}
-      <div className="h-screen bg-green-500 overflow-hidden flex items-center justify-center">
-        <div className="container flex items-center justify-center mx-8 space-x-8">
-          <div className="w-full max-w-md bg-gradient-to-r from-cyan-300 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
-            <form onSubmit={handlelogin} className="w-full">
-              <div className="flex flex-row space-x-26">
-              <h4 className="text-2xl font-bold mb-6 text-center pl-40">USER</h4>
-              <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
-              </div>
-              <div className="mb-4 border rounded-lg">
-                <input
-                  type="text"
-                  placeholder="Enter Your Email"
-                  className="input-box w-full text-center text-lg"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
-              </div>
-              <div className="mb-4">
-                <button
-                  type="submit"
-                  className="btn-primary w-full bg-blue-500 rounded-lg text-lg mt-5"
-                >
-                  LOGIN
-                </button>
-                <p className="text-center mt-3">Not registered?</p>
-                <button
-                  onClick={handleclick}
-                  className="btn-primar text-md text-blue-500 p-1 ml-38 "
-                >
-                  Register
-                </button>
-              </div>
-            </form>
-          </div>
+    <div className="h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.8 }} 
+        className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md"
+      >
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-extrabold text-gray-800">User Login</h2>
+          <button 
+            onClick={() => navigate("/")}
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Home
+          </button>
         </div>
-      </div>
-    </>
+
+        <form onSubmit={handlelogin} className="space-y-6">
+          <div>
+            <input
+              type="email"
+              placeholder="Enter your email"
+              className="w-full px-5 py-3 border rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none text-lg"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {err && <p className="text-red-500 text-sm mt-2">{err}</p>}
+          </div>
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }} 
+            whileTap={{ scale: 0.95 }} 
+            type="submit"
+            className="w-full bg-blue-500 text-white text-lg font-semibold py-3 rounded-xl shadow-md hover:bg-blue-600 transition-all duration-300"
+          >
+            Login
+          </motion.button>
+        </form>
+
+        <div className="text-center mt-6">
+          <p className="text-gray-600">Not registered?</p>
+          <button 
+            onClick={handleRegisterRedirect}
+            className="mt-2 text-blue-500 hover:underline hover:text-blue-700 font-medium"
+          >
+            Register Now
+          </button>
+        </div>
+      </motion.div>
+    </div>
   );
 };
 

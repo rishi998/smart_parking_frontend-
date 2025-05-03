@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion"; // For animations
 
 const BASE_URL = "http://localhost:5000";
 
@@ -46,7 +47,6 @@ const Register = () => {
       console.log("Response received:", response.data);
 
       if (response.data && response.data.accessToken) {
-        console.log(response.data.accessToken);
         localStorage.setItem("token", response.data.accessToken);
       }
       if (response.data.success) {
@@ -56,7 +56,7 @@ const Register = () => {
       console.error("Error during registration:", error);
 
       const errorMsg =
-        error.response && error.response.data && error.response.data.message
+        error.response && error.response.data?.message
           ? error.response.data.message
           : "An unexpected error occurred. Please try again.";
       setErr(errorMsg);
@@ -70,63 +70,74 @@ const Register = () => {
   }
 
   return (
-    <div className="h-screen bg-green-500 overflow-hidden flex items-center justify-center">
-      <div className="container flex items-center justify-center mx-8 space-x-8">
-        <div className="w-full max-w-md bg-gradient-to-r from-cyan-200 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
-          <form onSubmit={handleSignup} className="w-full">
-          <div className="flex flex-row space-x-26">
-              <h4 className="text-2xl font-bold mb-6 text-center pl-40">USER</h4>
-              <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
-          </div>
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Name"
-                className="input-box w-full text-center bg-amber-50"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Email"
-                className="input-box w-full text-center bg-amber-100"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="input-box w-full text-center bg-amber-50"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <input
-                type="tel"
-                placeholder="Phone"
-                className="input-box w-full text-center bg-amber-100"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
-            </div>
-            <div className="mb-4">
-              <button
-                type="submit"
-                className="btn-primary w-full rounded-lg mb-1 bg-blue-500 font-bold"
-              >
-                Register
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/login")}
-                className="btn-primar w-full rounded-lg text-blue-500 font-semibold"
-              >
-                Login
-              </button>
-            </div>
-          </form>
+    <div className="h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, y: 50 }} 
+        animate={{ opacity: 1, y: 0 }} 
+        transition={{ duration: 0.8 }}
+        className="bg-white rounded-3xl shadow-2xl p-10 w-full max-w-md"
+      >
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-extrabold text-gray-800">Register</h2>
+          <button 
+            onClick={() => navigate("/")}
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Home
+          </button>
         </div>
-      </div>
+
+        <form onSubmit={handleSignup} className="space-y-5">
+          <input
+            type="text"
+            placeholder="Full Name"
+            className="w-full px-5 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none text-lg"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email Address"
+            className="w-full px-5 py-3 border rounded-xl bg-gray-100 focus:ring-2 focus:ring-blue-400 focus:outline-none text-lg"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full px-5 py-3 border rounded-xl bg-gray-50 focus:ring-2 focus:ring-blue-400 focus:outline-none text-lg"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <input
+            type="tel"
+            placeholder="Phone Number"
+            className="w-full px-5 py-3 border rounded-xl bg-gray-100 focus:ring-2 focus:ring-blue-400 focus:outline-none text-lg"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+          {err && <p className="text-red-500 text-sm">{err}</p>}
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="w-full bg-blue-500 text-white text-lg font-semibold py-3 rounded-xl shadow-md hover:bg-blue-600 transition-all duration-300"
+          >
+            Register
+          </motion.button>
+        </form>
+
+        <div className="text-center mt-6">
+          <p className="text-gray-600">Already have an account?</p>
+          <button 
+            onClick={() => navigate("/login")}
+            className="mt-2 text-blue-500 hover:underline hover:text-blue-700 font-medium"
+          >
+            Login Here
+          </button>
+        </div>
+      </motion.div>
     </div>
   );
 };

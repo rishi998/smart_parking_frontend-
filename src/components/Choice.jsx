@@ -1,11 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import parkingImage from '../assets/images/parking.jpg'; // <-- import your image
 
 const Choice = () => {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const handleLogin = (role) => {
-    // Navigate based on role
     if (role === 'User') {
       navigate('/login');
     } else if (role === 'Admin') {
@@ -14,23 +15,41 @@ const Choice = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-800 text-white">
-      <h1 className="text-4xl mb-4">Welcome to Parker Pro</h1>
-      <p className="mb-8">Please choose your login role:</p>
-      <div className='flex flex-row '>
-      <button 
-        onClick={() => handleLogin('User')}
-        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline cursor-pointer"
+    <div 
+      className="min-h-screen bg-cover bg-center flex items-center justify-center" 
+      style={{ backgroundImage: `url(${parkingImage})` }} // <-- use imported image here
+    >
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.8 }} 
+        animate={{ opacity: 1, scale: 1 }} 
+        transition={{ duration: 0.7 }}
+        className="backdrop-blur-sm bg-opacity-90 rounded-3xl shadow-2xl p-10 flex flex-col items-center space-y-6 w-full max-w-md"
       >
-        Login as User
-      </button>
-      <button 
-        onClick={() => handleLogin('Admin')}
-        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline ml-4 cursor-pointer"
-      >
-        Login as Admin
-      </button>
-      </div>
+        <h1 className="text-4xl font-extrabold text-white-800 text-center">
+          Welcome to <span className="text-indigo-600">ParkerPro</span> 🚗
+        </h1>
+        <p className=" text-center ">Please choose your login role:</p>
+
+        <div className="flex flex-col space-y-4 w-full">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleLogin('User')}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 rounded-xl transition-all duration-300"
+          >
+            Login as User
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleLogin('Admin')}
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-xl transition-all duration-300"
+          >
+            Login as Admin
+          </motion.button>
+        </div>
+      </motion.div>
     </div>
   );
 };

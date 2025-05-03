@@ -172,7 +172,7 @@ const BookParking = () => {
   return (
     <div className="relative flex items-center justify-center bg-[url('/src/assets/images/parking.jpg')] bg-cover bg-center min-h-screen text-white">
       <div className="absolute inset-0 bg-black opacity-40 backdrop-blur-md"></div>
-      <div className="relative z-10 max-w-4xl mx-auto p-8 backdrop-blur rounded-lg shadow-xl text-center w-full bg-red-400">
+      <div className="relative z-10 max-w-4xl mx-auto p-8 backdrop-blur rounded-lg shadow-xl text-center w-full ">
         <h2 className="text-3xl font-bold mb-4">Book Your Parking Spot</h2>
 
         {/* Back Button */}

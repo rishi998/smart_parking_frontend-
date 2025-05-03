@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, replace } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Edit as EditIcon, Trash as TrashIcon } from "lucide-react";
-import AdminAreaAdd from "./Adminareaadd"; // Adjust path if needed
+import AdminAreaAdd from "./Adminareaadd";
 import AdminAreaModify from "./Adminareamodify";
 import axios from "axios";
-import { Eye as EyeIcon, CheckCircle as CheckCircleIcon} from 'lucide-react';
+import { Eye as EyeIcon, CheckCircle as CheckCircleIcon } from "lucide-react";
 
 const Adashboard = () => {
+  const [bookings, setBookings] = useState([]);
+  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [sortOption, setSortOption] = useState("newest");
+  const [isLoading, setIsLoading] = useState(false);
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedArea, setSelectedArea] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -14,42 +19,91 @@ const Adashboard = () => {
   const [users, setUsers] = useState([]);
 
   const [activePage, setActivePage] = useState("dashboard");
-  const [query, setQuery] = useState("");
-  const [selectedUser, setSelectedUser] = useState(null); // New state for selected user
+  const [selectedUser, setSelectedUser] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [areas, setAreas] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState([]);
 
   const location = useLocation();
   const admin = location.state?.admin;
   const navigate = useNavigate();
   const locations = selectedArea?.locations || [];
 
-  const usersData = [
-    {
-      name: "Alice Parker",
-      email: "alice@example.com",
-      gender: "Female",
-      phone: "9876543210",
-      car: "Honda Civic",
-      photo: "https://via.placeholder.com/100",
-    },
-    {
-      name: "Bob Marley",
-      email: "bob@example.com",
-      gender: "Male",
-      phone: "8765432109",
-      car: "Toyota Corolla",
-      photo: "https://via.placeholder.com/100",
-    },
-  ];
-  const [formData, setFormData] = useState({
-    areaName: "",
-    address: "",
-    levels: 1,
-    slotsPerLevel: [""],
-  });
+  const DashboardDropdown = ({ areas, onSelect }) => {
+    return (
+      <div className="relative mb-6">
+        <select
+          onChange={(e) => onSelect(e.target.value)}
+          className="w-full border border-gray-300 rounded-lg py-3 px-4 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+        >
+          <option value="">Select a parking area...</option>
+          {areas.map((area) => (
+            <option key={area._id} value={area._id}>
+              {area.areaName} - {area.address}
+            </option>
+          ))}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+    );
+  };
 
-  const handleInputChange = (e) => setQuery(e.target.value);
+  const fetchBookings = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get("http://localhost:5000/bookings/all");
+      if (response.data.success) {
+        setBookings(response.data.bookings);
+        setFilteredBookings(response.data.bookings);
+      }
+    } catch (error) {
+      console.error("Error fetching bookings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activePage === "managebookings") {
+      fetchBookings();
+    }
+  }, [activePage]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/auth/getallusers");
+      if (response.data.success) {
+        setUsers(response.data.users);
+      } else {
+        console.error("Failed to fetch users");
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAreas();
+    if (activePage === "manageusers") {
+      fetchUsers();
+    }
+  }, [activePage]);
+
   const fetchAreas = async () => {
     try {
       const response = await axios.get("http://localhost:5000/area/allareas");
@@ -62,43 +116,54 @@ const Adashboard = () => {
       console.error("Error fetching areas:", error);
     }
   };
-  useEffect(() => {
-    fetchAreas();
-  }, []);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/auth/getallusers/users');
-        setUsers(res.data.users);
-      } catch (err) {
-        console.error('Error fetching users:', err);
-      }
-    };
-    fetchUsers();
-  }, []);
-  const handleViewUser = (user) => setSelectedUser(user);
-
-const handleVerifyUser = async (userId) => {
-  try {
-    await axios.patch(`http://localhost:5000/auth/getallusers/users/verify/${userId}`);
-    setUsers(users.map(u => u._id === userId ? {...u, isVerified: true} : u));
-  } catch (err) {
-    console.error('Error verifying user:', err);
-  }
-};
-
-const handleDeleteUser = async (userId) => {
-  if (window.confirm('Are you sure you want to delete this user?')) {
+  const handleVerifyUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:5000/auth/getallusers/users/${userId}`);
-      setUsers(users.filter(u => u._id !== userId));
+      await axios.patch(
+        `http://localhost:5000/auth/getallusers/users/verify/${userId}`
+      );
+      setUsers(
+        users.map((u) => (u._id === userId ? { ...u, isverified: true } : u))
+      );
     } catch (err) {
-      console.error('Error deleting user:', err);
+      console.error("Error verifying user:", err);
     }
-  }
-};
-  
+  };
+
+  const handleSearchBookings = () => {
+    const filtered = bookings.filter(
+      (booking) =>
+        booking.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.area.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        booking._id.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredBookings(filtered);
+  };
+
+  const handleSort = (option) => {
+    setSortOption(option);
+    const sorted = [...filteredBookings].sort((a, b) => {
+      const dateA = new Date(a.dateOfBooking);
+      const dateB = new Date(b.dateOfBooking);
+      return option === "newest" ? dateB - dateA : dateA - dateB;
+    });
+    setFilteredBookings(sorted);
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (window.confirm("Are you sure you want to delete this user?")) {
+      try {
+        await axios.delete(
+          `http://localhost:5000/auth/getallusers/users/${userId}`
+        );
+        setUsers(users.filter((u) => u._id !== userId));
+      } catch (err) {
+        console.error("Error deleting user:", err);
+      }
+    }
+  };
+
   const handleDeleteArea = async (area) => {
     const confirmed = window.confirm(
       `Are you sure you want to delete ${area.areaName}?`
@@ -111,7 +176,7 @@ const handleDeleteUser = async (userId) => {
       );
       if (res.data.success) {
         alert("Area deleted successfully!");
-        fetchAreas(); // refresh UI immediately
+        fetchAreas();
       } else {
         alert("Failed to delete area.");
       }
@@ -140,18 +205,86 @@ const handleDeleteUser = async (userId) => {
   const handleEditArea = () => {
     navigate("/modifyarea", { state: { admin } });
   };
+
   const handleModalClose = () => {
     setShowAddModal(false);
   };
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  const handleSelectArea = (area) => setSelectedArea(area);
-  const handleSelectLocation = (loc) => setSelectedLocation(loc);
 
   const resetSelections = () => {
     setSelectedArea(null);
     setSelectedLocation(null);
-    setSelectedUser(null); // reset user profile view
+    setSelectedUser(null);
+  };
+
+  const BookingCard = ({ booking }) => {
+    const formatDate = (dateString) => {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    };
+
+    const bookingIdParts = booking._id.split("-");
+    const spotNumber = bookingIdParts[1] || booking.slotNumber;
+
+    return (
+      <div className="bg-white border border-gray-200 rounded-lg shadow-md p-4 mb-4 hover:shadow-lg transition-shadow">
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-semibold text-blue-600">
+              {booking.area} - {spotNumber}
+            </h3>
+            <p className="text-gray-600">
+              Level: {booking.level}, {booking.address}
+            </p>
+          </div>
+          <span
+            className={`px-2 py-1 rounded-full text-xs ${
+              booking.isVerified
+                ? "bg-green-100 text-green-800"
+                : "bg-yellow-100 text-yellow-800"
+            }`}
+          >
+            {booking.isVerified ? "Verified" : "Pending"}
+          </span>
+        </div>
+
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-2">
+          <div>
+            <p className="text-sm text-gray-500">User</p>
+            <p className="font-medium">{booking.username}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Booking Date</p>
+            <p className="font-medium">
+              {formatDate(booking.dateOfBooking)} at {booking.timeOfBooking}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Created At</p>
+            <p className="font-medium">{formatDate(booking.createdAt)}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Access Token</p>
+            <p className="font-medium text-xs truncate">
+              {booking.accessToken}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 flex justify-end space-x-2">
+          <button className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+            {booking.isVerified ? "Unverify" : "Verify"}
+          </button>
+          <button className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const renderCards = () => (
@@ -203,27 +336,38 @@ const handleDeleteUser = async (userId) => {
         </div>
         <nav className="mt-6 space-y-2 px-4">
           <button
-            className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
-            onClick={() => setActivePage("dashboard")}
+            className={`block w-full text-left py-2 px-3 rounded ${
+              activePage === "dashboard" ? "bg-gray-700" : "hover:bg-gray-700"
+            }`}
+            onClick={() => {
+              setActivePage("dashboard");
+              resetSelections();
+            }}
           >
             Dashboard
           </button>
           <button
-            className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
+            className={`block w-full text-left py-2 px-3 rounded ${
+              activePage === "managebookings" ? "bg-gray-700" : "hover:bg-gray-700"
+            }`}
             onClick={() => setActivePage("managebookings")}
           >
             Manage Bookings
           </button>
           <button
-            className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
+            className={`block w-full text-left py-2 px-3 rounded ${
+              activePage === "manageusers" ? "bg-gray-700" : "hover:bg-gray-700"
+            }`}
             onClick={() => setActivePage("manageusers")}
           >
             Manage Users
           </button>
           <button
-            className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700"
+            className={`block w-full text-left py-2 px-3 rounded ${
+              activePage === "manageareas" ? "bg-gray-700" : "hover:bg-gray-700"
+            }`}
             onClick={() => setActivePage("manageareas")}
-          >
+          >   
             Manage Areas
           </button>
           <button
@@ -256,65 +400,63 @@ const handleDeleteUser = async (userId) => {
           </div>
         </nav>
 
-        <section className="text-center pt-32 pb-4 bg-gradient-to-r from-green-500 to-green-600 text-white">
-          <div className="flex flex-row space-x-4 justify-center">
-            <button
-              onClick={() => setActivePage("manageareas")}
-              className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
-            >
-              My Areas
-            </button>
-            <button
-              onClick={() => setActivePage("managebookings")}
-              className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
-            >
-              Recent Bookings
-            </button>
-            <button
-              onClick={() => setActivePage("users")}
-              className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
-            >
-              Users
-            </button>
-            <button
-              onClick={() => setActivePage("charts")}
-              className="bg-white text-red-600 font-semibold py-2 px-4 rounded shadow hover:bg-gray-200"
-            >
-              Charts
-            </button>
-          </div>
-        </section>
-
-        <section className="w-full bg-white py-6 px-4 shadow-sm rounded-xl">
+        <section className="w-full bg-white py-6 px-4 shadow-sm rounded-xl mt-30">
           <div className="max-w-5xl mx-auto">
             {activePage === "dashboard" && (
               <>
-                <h2 className="text-2xl font-semibold mb-4 text-gray-800">
-                  Search for Slots!
-                </h2>
-                <div className="relative mb-6">
-                  <input
-                    type="text"
-                    placeholder="Search by location..."
-                    value={query}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg py-3 px-4 pl-10 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                  <svg
-                    className="absolute left-3 top-3.5 w-5 h-5 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M21 21l-4.35-4.35M17 11a6 6 0 11-12 0 6 6 0 0112 0z"
-                    />
-                  </svg>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-800">
+                    Parking Area Management
+                  </h2>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={resetSelections}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                    >
+                      Reset
+                    </button>
+                  </div>
                 </div>
-                {selectedArea && selectedLocation && renderCards()}
+
+                {!selectedArea ? (
+                  <DashboardDropdown 
+                    areas={areas}
+                    onSelect={(areaId) => {
+                      const selected = areas.find(a => a._id === areaId);
+                      if (selected) setSelectedArea(selected);
+                    }}
+                  />
+                ) : !selectedLocation ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-4">
+                      <button
+                        onClick={() => setSelectedArea(null)}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                      >
+                        Back
+                      </button>
+                      <h3 className="text-lg font-medium">
+                        Select a location in {selectedArea.areaName}
+                      </h3>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {selectedArea.locations.map((location) => (
+                        <div
+                          key={location}
+                          className="bg-white border p-4 rounded-lg shadow hover:shadow-md cursor-pointer transition-all"
+                          onClick={() => setSelectedLocation(location)}
+                        >
+                          <h4 className="font-medium text-blue-600">{location}</h4>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {selectedArea.address}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  renderCards()
+                )}
               </>
             )}
 
@@ -322,7 +464,6 @@ const handleDeleteUser = async (userId) => {
               <>
                 {!selectedArea && (
                   <>
-                    {/* Add Area button */}
                     <div className="flex justify-end mb-4 space-x-6">
                       <button
                         onClick={handleAddArea}
@@ -338,27 +479,24 @@ const handleDeleteUser = async (userId) => {
                       </button>
                     </div>
 
-                    {/* Area cards */}
-
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       {areas.map((area) => (
                         <div
                           key={area._id}
                           className="relative bg-gray-100 p-4 rounded-lg shadow hover:shadow-lg cursor-pointer"
                         >
-                          {/* Delete Icon */}
                           <div className="absolute top-2 right-2 flex space-x-2">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDeleteArea(area); // now it deletes from DB and updates UI
+                                handleDeleteArea(area);
                               }}
                             >
                               <TrashIcon className="w-4 h-4 text-red-600 hover:text-red-800" />
                             </button>
                           </div>
 
-                          <div onClick={() => handleSelectArea(area)}>
+                          <div onClick={() => setSelectedArea(area)}>
                             <h3 className="text-xl font-semibold text-blue-600">
                               {area.areaName}
                             </h3>
@@ -366,16 +504,11 @@ const handleDeleteUser = async (userId) => {
                               {area.address}
                             </p>
                             <p className="text-gray-700 text-sm mt-2">
-                              <span className="font-medium">
-                                {" "}
-                                No. of Levels:
-                              </span>{" "}
+                              <span className="font-medium">No. of Levels:</span>{" "}
                               {area.levels}
                             </p>
                             <p className="text-gray-700 text-sm">
-                              <span className="font-medium">
-                                Slots per level:
-                              </span>{" "}
+                              <span className="font-medium">Slots per level:</span>{" "}
                               {area.slotsPerLevel.join(", ")}
                             </p>
                           </div>
@@ -425,7 +558,7 @@ const handleDeleteUser = async (userId) => {
                         <div
                           key={loc}
                           className="bg-white border p-4 rounded shadow hover:shadow-md cursor-pointer"
-                          onClick={() => handleSelectLocation(loc)}
+                          onClick={() => setSelectedLocation(loc)}
                         >
                           <h3 className="text-lg font-medium text-blue-700">
                             {loc}
@@ -437,7 +570,6 @@ const handleDeleteUser = async (userId) => {
                 )}
                 {selectedArea && selectedLocation && renderCards()}
 
-                {/* Show Modal */}
                 {showAddModal && (
                   <AdminAreaAdd
                     onClose={handleModalClose}
@@ -450,103 +582,127 @@ const handleDeleteUser = async (userId) => {
               </>
             )}
 
-            {activePage === "users" && (
-              <>
-                {!selectedUser ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {usersData.map((user, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-100 p-4 rounded-lg shadow hover:shadow-lg cursor-pointer flex flex-col items-center"
-                        onClick={() => setSelectedUser(user)}
+            {activePage === "managebookings" && (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    Manage Bookings
+                  </h2>
+                  <div className="flex items-center space-x-4">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search bookings..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSearchBookings()}
+                        className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <svg
+                        className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
-                        <img
-                          src={user.photo}
-                          alt={user.name}
-                          className="rounded-full h-20 w-20 mb-2"
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                         />
-                        <h3 className="text-lg font-semibold">{user.name}</h3>
+                      </svg>
+                    </div>
+                    <button
+                      onClick={handleSearchBookings}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                      Search
+                    </button>
+                    <div className="relative">
+                      <select
+                        value={sortOption}
+                        onChange={(e) => handleSort(e.target.value)}
+                        className="appearance-none pl-3 pr-8 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
                       </div>
+                    </div>
+                    {searchQuery && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery("");
+                          setFilteredBookings(bookings);
+                        }}
+                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-64">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+                  </div>
+                ) : filteredBookings.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredBookings.map((booking) => (
+                      <BookingCard key={booking._id} booking={booking} />
                     ))}
                   </div>
                 ) : (
-                  <div className="bg-gray-50 border border-gray-200 p-6 rounded-xl shadow text-center max-w-md mx-auto space-y-3">
-                    <img
-                      src={selectedUser.photo}
-                      alt={selectedUser.name}
-                      className="rounded-full h-24 w-24 mx-auto"
-                    />
-                    <h3 className="text-2xl font-bold">{selectedUser.name}</h3>
-                    <p>Email: {selectedUser.email}</p>
-                    <p>Gender: {selectedUser.gender}</p>
-                    <p>Phone: {selectedUser.phone}</p>
-                    <p>Car: {selectedUser.car}</p>
-                    <div className="flex justify-between mt-6">
-                      <button
-                        onClick={() => setSelectedUser(null)}
-                        className="px-4 py-2 bg-yellow-400 text-white rounded"
-                      >
-                        Back
-                      </button>
-                      <button
-                        onClick={resetSelections}
-                        className="px-4 py-2 bg-red-500 text-white rounded"
-                      >
-                        Close
-                      </button>
-                    </div>
+                  <div className="text-center py-10">
+                    <p className="text-gray-500 text-lg">
+                      {searchQuery
+                        ? "No bookings match your search"
+                        : "No bookings found"}
+                    </p>
                   </div>
                 )}
-              </>
-            )}
-
-            {activePage === "charts" && (
-              <div className="flex flex-col items-center space-y-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                  Top Booking Areas
-                </h2>
-                {(() => {
-                  const bookingCounts = {};
-
-                  recentBookings.forEach(({ area, location }) => {
-                    const key = `${area} - ${location}`;
-                    bookingCounts[key] = (bookingCounts[key] || 0) + 1;
-                  });
-
-                  const sortedBookings = Object.entries(bookingCounts).sort(
-                    (a, b) => b[1] - a[1]
-                  );
-
-                  return sortedBookings.map(([key, count], index) => (
-                    <div
-                      key={index}
-                      className="bg-white border border-blue-300 shadow-md rounded-lg px-6 py-4 w-96 text-center"
-                    >
-                      <h3 className="text-xl font-semibold text-blue-800 mb-1">
-                        {key}
-                      </h3>
-                      <p className="text-gray-700 font-medium">
-                        Bookings: {count}
-                      </p>
-                    </div>
-                  ));
-                })()}
               </div>
             )}
-            {activePage === "managebookings" && (
+
+            {activePage === "manageusers" && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-gray-800">
                     Registered Users
                   </h2>
-                  <div className="relative">
+                  <div className="relative flex items-center">
                     <input
                       type="text"
-                      placeholder="Search users..."
+                      placeholder="Search users by name..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          const filtered = users.filter(user =>
+                            user.name.toLowerCase().includes(searchQuery.toLowerCase())
+                          );
+                          setFilteredUsers(filtered);
+                        }
+                      }}
                       className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <svg
-                      className="absolute left-3 top-2.5 w-5 h-5 text-gray-400"
+                      className="absolute left-3 w-5 h-5 text-gray-400"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -558,6 +714,17 @@ const handleDeleteUser = async (userId) => {
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                       />
                     </svg>
+                    <button
+                      onClick={() => {
+                        const filtered = users.filter(user =>
+                          user.name.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                        setFilteredUsers(filtered);
+                      }}
+                      className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                    >
+                      Search
+                    </button>
                   </div>
                 </div>
 
@@ -575,9 +742,9 @@ const handleDeleteUser = async (userId) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {users.map((user) => (
+                      {(searchQuery ? filteredUsers : users).map((user) => (
                         <tr key={user._id} className="hover:bg-gray-50">
-                          <td className="py-4 px-4">{user.id}</td>
+                          <td className="py-4 px-4">{user._id}</td>
                           <td className="py-4 px-4 font-medium">{user.name}</td>
                           <td className="py-4 px-4">{user.email}</td>
                           <td className="py-4 px-4">{user.phone}</td>
@@ -604,13 +771,15 @@ const handleDeleteUser = async (userId) => {
                               >
                                 <EyeIcon className="w-5 h-5" />
                               </button>
-                              <button
-                                onClick={() => handleVerifyUser(user._id)}
-                                className="p-2 text-green-600 hover:bg-green-50 rounded"
-                                title="Verify User"
-                              >
-                                <CheckCircleIcon className="w-5 h-5" />
-                              </button>
+                              {!user.isVerified && (
+                                <button
+                                  onClick={() => handleVerifyUser(user._id)}
+                                  className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                  title="Verify User"
+                                >
+                                  <CheckCircleIcon className="w-5 h-5" />
+                                </button>
+                              )}
                               <button
                                 onClick={() => handleDeleteUser(user._id)}
                                 className="p-2 text-red-600 hover:bg-red-50 rounded"
@@ -626,7 +795,6 @@ const handleDeleteUser = async (userId) => {
                   </table>
                 </div>
 
-                {/* User Detail Modal */}
                 {selectedUser && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -640,6 +808,12 @@ const handleDeleteUser = async (userId) => {
                         </button>
                       </div>
                       <div className="space-y-4">
+                        <div>
+                          <p className="text-gray-600">ID:</p>
+                          <p className="font-medium text-sm break-all">
+                            {selectedUser._id}
+                          </p>
+                        </div>
                         <div>
                           <p className="text-gray-600">Name:</p>
                           <p className="font-medium">{selectedUser.name}</p>

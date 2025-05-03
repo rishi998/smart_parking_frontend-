@@ -20,7 +20,7 @@ const VerifyOtp = () => {
         console.log("User name:", response.data.user.name);
         localStorage.setItem("token", response.data.accessToken);
         localStorage.setItem("user", response.data.user.name);
-        navigate("/dashboard", {state: {user: response.data.user}});
+        navigate("/dashboard", { state: { user: response.data.user } });
         return true;
       } else {
         setErr("Verification failed: Invalid OTP or user not found");
@@ -41,40 +41,48 @@ const VerifyOtp = () => {
     setErr("");
     const isValid = await validateOtp(otp);
     if (isValid) {
-      console.log("Logged in successful");
+      console.log("Logged in successfully");
     } else {
       console.log("Verification failed, check errors for details.");
     }
   };
 
   return (
-    <div className="h-screen bg-gray-50 overflow-hidden flex items-center justify-center">
-      <div className="container flex items-center justify-center mx-8 space-x-8">
-        <div className="w-full max-w-md bg-white rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
-          <form onSubmit={handleVerification} className="w-full">
-            <h4 className="text-2xl font-semibold mb-6 text-center">Enter OTP</h4>
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Enter OTP"
-                className="input-box w-full"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value)}
-              />
-              {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
-            </div>
-            <div className="mb-4">
-              <button type="submit" className="btn-primary bg-emerald-500 w-full rounded-lg">
-                Verify
-              </button>
-            </div>
-            <div className="mb-4">
-              <button type="button" onClick={() => navigate('/register')} className="btn-secondary bg-blue-500 w-full rounded-lg">
-                Register Instead
-              </button>
-            </div>
-          </form>
-        </div>
+    <div className="h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center bg-gray-100">
+      <div className="bg-white rounded-2xl shadow-xl p-10 w-full max-w-md flex flex-col justify-center items-center">
+        <form onSubmit={handleVerification} className="w-full">
+          <h4 className="text-3xl font-bold mb-6 text-center text-gray-800">Enter OTP</h4>
+
+          <div className="mb-6">
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              className="w-full py-3 px-4 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+            />
+            {err && <p className="text-red-500 text-sm mt-2 text-center">{err}</p>}
+          </div>
+
+          <div className="mb-4">
+            <button 
+              type="submit"
+              className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-all duration-300"
+            >
+              Verify
+            </button>
+          </div>
+
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => navigate('/register')}
+              className="text-blue-500 hover:underline"
+            >
+              Register Instead
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion";
 
 const BASE_URL = "http://localhost:5000";
 
@@ -8,9 +9,7 @@ const Aregister = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  // const [phone, setPhone] = useState("");
   const [err, setErr] = useState(null);
-
   const navigate = useNavigate();
 
   const handleSignup = async (e) => {
@@ -31,25 +30,19 @@ const Aregister = () => {
     }
 
     try {
-      console.log("Sending request to register...");
       const response = await axios.post(`${BASE_URL}/adminauth/register`, {
         email,
         name,
         password,
       });
 
-      console.log("Response received:", response.data);
-
       if (response.data && response.data.accessToken) {
-        console.log(response.data.accessToken);
         localStorage.setItem("token", response.data.accessToken);
       }
       if (response.data.success) {
         navigate("/adminlogin");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-
       const errorMsg =
         error.response && error.response.data && error.response.data.message
           ? error.response.data.message
@@ -65,56 +58,67 @@ const Aregister = () => {
   }
 
   return (
-    <div className="h-screen bg-green-500 overflow-hidden flex items-center justify-center">
-      <div className="container flex items-center justify-center mx-8 space-x-8">
-        <div className="w-full max-w-md bg-gradient-to-r from-cyan-200 to-cyan-400 rounded-lg p-10 shadow-lg shadow-gray-200/20 flex flex-col justify-center items-center">
-          <form onSubmit={handleSignup} className="w-full">
-          <div className="flex flex-row space-x-26">
-            <h4 className="text-2xl font-semibold mb-6 text-center pl-35">ADMIN</h4>
-            <h4 onClick={()=>{navigate("/")}} className="cursor-pointer">Home</h4>
-          </div>
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Name"
-                className="input-box w-full text-center bg-amber-50"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-              <input
-                type="text"
-                placeholder="Email"
-                className="input-box w-full text-center bg-amber-100"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                className="input-box w-full text-center bg-amber-50"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              {err && <p className="text-red-500 text-xs mt-2">{err}</p>}
-            </div>
-            <div className="mb-4">
-              <button
-                type="submit"
-                className="btn-primary w-full rounded-lg mb-1 bg-blue-500 font-bold"
-              >
-                Register
-              </button>
-              <button
-                type="button"
-                onClick={() => navigate("/adminlogin")}
-                className="btn-primar w-full rounded-lg text-blue-500 font-semibold"
-              >
-                Login
-              </button>
-            </div>
-          </form>
+    <div className="h-screen bg-gradient-to-br from-green-200 via-blue-200 to-purple-200 flex items-center justify-center">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8 }}
+        className="bg-white bg-opacity-90 backdrop-blur-lg rounded-xl shadow-2xl p-10 w-full max-w-md mx-4"
+      >
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-black">Admin Register</h1>
+          <button 
+            onClick={() => navigate("/")} 
+            className="text-sm text-black hover:text-gray-600 transition"
+          >
+            Home
+          </button>
         </div>
-      </div>
+
+        <form onSubmit={handleSignup} className="flex flex-col space-y-4">
+          <input
+            type="text"
+            placeholder="Name"
+            className="w-full p-3 rounded-md bg-gray-100 placeholder-black text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            className="w-full p-3 rounded-md bg-gray-100 placeholder-black text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full p-3 rounded-md bg-gray-100 placeholder-black text-black focus:outline-none focus:ring-2 focus:ring-blue-400"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {err && <p className="text-red-600 text-center text-sm">{err}</p>}
+
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="w-full bg-black hover:bg-gray-800 text-white font-semibold py-3 rounded-md transition"
+          >
+            Register
+          </motion.button>
+        </form>
+
+        <p className="text-center text-black mt-6">Already have an account?</p>
+        <motion.button 
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => navigate("/adminlogin")}
+          className="mt-2 text-black underline hover:text-gray-700 transition"
+        >
+          Login Here
+        </motion.button>
+      </motion.div>
     </div>
   );
 };
