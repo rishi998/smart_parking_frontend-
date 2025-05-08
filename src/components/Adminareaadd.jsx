@@ -54,9 +54,9 @@ const AdminAreaAdd = ({ onClose, onAreaAdded }) => {
       alert('Please enter valid slots for each level.');
       return;
     }
-
     try {
       const response = await axios.post('http://localhost:5000/area/addarea', formData);
+      console.log(response.data)
       if (response.data.success) {
         alert('Area successfully added!');
         onAreaAdded(); // trigger parent refresh

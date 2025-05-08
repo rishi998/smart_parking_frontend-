@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+// import moment from 'moment';
 
 const BookParking = () => {
   const [parkingAreas, setParkingAreas] = useState([]);
@@ -22,7 +23,8 @@ const BookParking = () => {
     const fetchParkingAreas = async () => {
       try {
         const res = await axios.get("http://localhost:5000/area/allareas");
-        setParkingAreas(res.data.areas || []);
+        console.log(res.data.areas);
+        setParkingAreas(res.data.areas);
       } catch (err) {
         console.error("Error fetching parking areas:", err);
       }
@@ -38,7 +40,7 @@ const BookParking = () => {
           const level = `Level ${selectedLevelIndex + 1}`;
           const res = await axios.get(
             `http://localhost:5000/bookings/booked-slots/${
-              selectedArea._id
+              selectedArea.id
             }/${encodeURIComponent(level)}`
           );
           setBookedSlots(res.data.bookedSlots || []);
@@ -82,71 +84,94 @@ const BookParking = () => {
   };
 
   const handleBooking = async () => {
-    if (
-      !selectedArea ||
-      selectedLevelIndex === null ||
-      !selectedSpot ||
-      !selectedDate ||
-      !selectedTime
-    ) {
-      setBookingStatus("Please fill all the details!");
-      return;
-    }
-
-    const details = {
-      username: localStorage.getItem("user"),
-      area: selectedArea.areaName,
-      address: selectedArea.address,
-      level: `Level ${selectedLevelIndex + 1}`,
-      slotNumber: selectedSpot,
-      dateOfBooking: selectedDate,
-      timeOfBooking: selectedTime,
-      accessToken: crypto.randomUUID(),
-      areaId: selectedArea._id, // Add area ID to the request
-    };
-
     try {
+      // Validate all required fields
+      if (
+        !selectedArea ||
+        selectedLevelIndex === null ||
+        !selectedSpot ||
+        !selectedDate ||
+        !selectedTime
+      ) {
+        setBookingStatus("Please fill all the details!");
+        return;
+      }
+  
+      // Format the booking data to match backend expectations
+      const bookingData = {
+        username: localStorage.getItem("user") || '', // Fallback to empty string
+        area: selectedArea.areaName,
+        address: selectedArea.address,
+        level: `Level ${selectedLevelIndex + 1}`,
+        slotNumber: selectedSpot.toString(), // Ensure string format
+        dateOfBooking: new Date(selectedDate).toISOString().split('T')[0],
+        // Format date
+        timeOfBooking: selectedTime,
+        accessToken: crypto.randomUUID(),
+        areaId: selectedArea.id.toString(), // Using 'id' instead of '_id' for MySQL
+      };
+  
+      console.log('Submitting booking:', bookingData); // Debug log
+  
       const response = await axios.post(
         "http://localhost:5000/bookings/book",
-        details
+        bookingData,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
-
+  
       if (response.data.success) {
+        console.log(response.data.booking)
+        // Handle successful booking
         const savedBooking = response.data.booking;
-
+  
         setConfirmationDetails({
-          ...details,
-          _id: savedBooking._id,
+          id:savedBooking.id,
+          username : savedBooking.username,
+          area: savedBooking.area,
+          address: savedBooking.address,
+          level: savedBooking.level,
+          slotNumber: savedBooking.slotNumber,
+          date: savedBooking.dateOfBooking,
+          time: savedBooking.timeOfBooking,
+          bookingId: savedBooking.id, // Using 'id' from MySQL
         });
-
-        // Update the spot status in UI
-        const updatedSpots = parkingSpots.map((spot) =>
+  
+        // Update UI state
+        const updatedSpots = parkingSpots.map(spot =>
           spot.id === selectedSpot ? { ...spot, status: "booked" } : spot
         );
         setParkingSpots(updatedSpots);
-
+  
         setBookingStatus("Booking successful!");
         setUserBooking(selectedSpot);
-
-        alert(`Booking confirmed for ${details.slotNumber} at ${details.area}`);
+  
+        // Show confirmation
+        alert(`Booking confirmed for Spot ${savedBooking.slotNumber} at ${savedBooking.area}`);
       } else {
-        setBookingStatus("Failed to save booking. Try again later.");
+        setBookingStatus(response.data.message || "Booking failed");
       }
     } catch (err) {
-      console.error("Error booking:", err);
-      setBookingStatus("Failed to save booking. Try again later.");
+      console.error("Booking error:", err.response?.data || err.message);
+      setBookingStatus(
+        err.response?.data?.message || 
+        "Failed to save booking. Please try again."
+      );
     }
   };
 
   const handleCancelBooking = async () => {
-    if (!confirmationDetails || !confirmationDetails._id) {
+    if (!confirmationDetails || !confirmationDetails.id) {
       setBookingStatus("No active booking found to cancel.");
       return;
     }
 
     try {
       const response = await axios.delete(
-        `http://localhost:5000/bookings/cancel/${confirmationDetails._id}`
+        `http://localhost:5000/bookings/cancel/${confirmationDetails.id}`
       );
 
       if (response.data.success) {
@@ -199,10 +224,10 @@ const BookParking = () => {
           <div className="w-full">
             <label className="block font-semibold mb-2">Parking Area</label>
             <select
-              value={selectedArea ? selectedArea._id : ""}
+              value={selectedArea ? selectedArea.id : ""}
               onChange={(e) => {
                 const selected = parkingAreas.find(
-                  (area) => area._id === e.target.value
+                  (area) => area.id === parseInt(e.target.value) // Convert to number since your IDs are numbers
                 );
                 setSelectedArea(selected);
                 setSelectedLevelIndex(null);
@@ -210,15 +235,18 @@ const BookParking = () => {
               }}
               className="text-white p-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-teal-600 w-full"
             >
-              <option value="">Select</option>
+              <option value="">Select Parking Area</option>
               {parkingAreas.map((area) => (
-                <option key={area._id} value={area._id} className="text-black">
+                <option
+                  key={area.id}
+                  value={area.id} // Using the numeric id from your database
+                  className="text-black"
+                >
                   {area.areaName} - {area.address}
                 </option>
               ))}
             </select>
           </div>
-
           <div className="w-full">
             <label className="block font-semibold mb-2">Level</label>
             <select
@@ -351,13 +379,10 @@ const BookParking = () => {
                 <strong>Level:</strong> {confirmationDetails.level}
               </li>
               <li>
-                <strong>Date:</strong> {confirmationDetails.dateOfBooking}
+                <strong>Date:</strong> {confirmationDetails.date}
               </li>
               <li>
-                <strong>Time:</strong> {confirmationDetails.timeOfBooking}
-              </li>
-              <li>
-                <strong>Access Token:</strong> {confirmationDetails.accessToken}
+                <strong>Time:</strong> {confirmationDetails.time}
               </li>
             </ul>
           </div>

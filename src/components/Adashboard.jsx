@@ -66,8 +66,9 @@ const Adashboard = () => {
   const fetchBookings = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/bookings/all");
+      const response = await axios.get("http://localhost:5000/bookings/allbookings");
       if (response.data.success) {
+        console.log(response.data.bookings)
         setBookings(response.data.bookings);
         setFilteredBookings(response.data.bookings);
       }
@@ -86,7 +87,7 @@ const Adashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/auth/getallusers");
+      const response = await axios.get("http://localhost:5000/auth/users");
       if (response.data.success) {
         setUsers(response.data.users);
       } else {
@@ -166,23 +167,35 @@ const Adashboard = () => {
 
   const handleDeleteArea = async (area) => {
     const confirmed = window.confirm(
-      `Are you sure you want to delete ${area.areaName}?`
+      `Are you sure you want to delete "${area.areaName}"?`
     );
     if (!confirmed) return;
-
+  
+    console.log(area)
     try {
       const res = await axios.delete(
-        `http://localhost:5000/area/deletearea/${area._id}`
+        `http://localhost:5000/area/deletearea/${area.id}`,  // Changed from area._id to area.id
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            // Add authorization header if needed
+            // 'Authorization': `Bearer ${token}`
+          }
+        }
       );
+  
       if (res.data.success) {
         alert("Area deleted successfully!");
-        fetchAreas();
+        fetchAreas(); // Refresh the areas list
       } else {
-        alert("Failed to delete area.");
+        alert(res.data.message || "Failed to delete area.");
       }
     } catch (error) {
       console.error("Delete Error:", error);
-      alert("An error occurred while deleting.");
+      alert(
+        error.response?.data?.message ||
+        "An error occurred while deleting the area."
+      );
     }
   };
 
@@ -422,7 +435,7 @@ const Adashboard = () => {
                   <DashboardDropdown 
                     areas={areas}
                     onSelect={(areaId) => {
-                      const selected = areas.find(a => a._id === areaId);
+                      const selected = areas.find(a => a.id === areaId);
                       if (selected) setSelectedArea(selected);
                     }}
                   />
@@ -744,7 +757,7 @@ const Adashboard = () => {
                     <tbody className="divide-y divide-gray-200">
                       {(searchQuery ? filteredUsers : users).map((user) => (
                         <tr key={user._id} className="hover:bg-gray-50">
-                          <td className="py-4 px-4">{user._id}</td>
+                          <td className="py-4 px-4">{user.id}</td>
                           <td className="py-4 px-4 font-medium">{user.name}</td>
                           <td className="py-4 px-4">{user.email}</td>
                           <td className="py-4 px-4">{user.phone}</td>

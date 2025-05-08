@@ -59,12 +59,12 @@ const MyBookings = () => {
   const handleConfirmCancel = async () => {
     try {
       const response = await axios.delete(
-        `http://localhost:5000/bookings/cancel/${selectedBooking._id}`
+        `http://localhost:5000/bookings/cancel/${selectedBooking.id}`
       );
 
       if (response.data.success) {
         setBookings((prev) =>
-          prev.filter((b) => b._id !== selectedBooking._id)
+          prev.filter((b) => b.id !== selectedBooking.id)
         );
         setShowCancelModal(false);
         setSelectedBooking(null);

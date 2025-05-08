@@ -3,40 +3,6 @@ import axios from 'axios';
 import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 
-  const parkingAreas = [
-    {
-      id: 1,
-      name: "Central Delhi",
-      address: "Connaught Place, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3"],
-    },
-    {
-      id: 2,
-      name: "North Delhi",
-      address: "Kamla Nagar, Delhi",
-      levels: ["Level 1", "Level 2"],
-    },
-    {
-      id: 3,
-      name: "South Delhi",
-      address: "Saket, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3", "Level 4"],
-    },
-    {
-      id: 4,
-      name: "East Delhi",
-      address: "Laxmi Nagar, Delhi",
-      levels: ["Level 1", "Level 2"],
-    },
-    {
-      id: 5,
-      name: "West Delhi",
-      address: "Rajouri Garden, Delhi",
-      levels: ["Level 1", "Level 2", "Level 3"],
-    },
-  ];
-
-
 const AdminAreaModify = () => {
   const [areas, setAreas] = useState([]);
   const [selectedArea, setSelectedArea] = useState(null);
@@ -124,7 +90,7 @@ const AdminAreaModify = () => {
     }
 
     try {
-      const res = await axios.put(`http://localhost:5000/area/updatearea/${selectedArea._id}`, formData);
+      const res = await axios.put(`http://localhost:5000/area/updatearea/${selectedArea.id}`, formData);
       if (res.data.success) {
         alert("Area updated successfully!");
         fetchAreas();
