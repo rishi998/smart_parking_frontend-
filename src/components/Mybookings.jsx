@@ -138,8 +138,8 @@ const MyBookings = () => {
                       : "bg-orange-100 text-orange-700"
                   }`}
                 >
-                  {/* {booking.bookingStatus} */}
-                  Confirmed
+                {booking.bookingStatus}
+                  
                 </span>
                 <button
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
@@ -184,7 +184,7 @@ const MyBookings = () => {
               </p>
               <p>
                 <strong>PAYMENT STATUS:</strong>{" "}
-                {selectedBooking.paymentStatus || "Paid"}
+                {selectedBooking.paymentStatus || "Pending"}
               </p>
               <p>
                 <strong>BOOKING STATUS:</strong> Confirmed
