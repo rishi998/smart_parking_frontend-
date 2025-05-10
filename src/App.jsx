@@ -1,6 +1,5 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-// import Home from './components/Home.jsx'
 import Register from './components/Register.jsx'
 import Login from './components/Login.jsx'
 import VerifyOtp from './components/Verifyotp.jsx'
@@ -16,6 +15,7 @@ import Adashboard from './components/Adashboard.jsx'
 import AdminAreaAdd from './components/Adminareaadd.jsx'
 import AdminAreaDelete from './components/Adminareadelete.jsx'
 import AdminAreaModify from './components/Adminareamodify.jsx'
+import SuccessPage from './components/SuccessPage.jsx'
 const App = () => {
   return (
     <div>
@@ -36,6 +36,7 @@ const App = () => {
       <Route path='/addarea' element={<AdminAreaAdd/>}></Route>
       <Route path='/deletearea' element={<AdminAreaDelete/>}></Route>
       <Route path='/modifyarea' element={<AdminAreaModify/>}></Route>
+    <Route path='/success-page' element={<SuccessPage/>}></Route>
     </Routes>
     </BrowserRouter>
     </div>

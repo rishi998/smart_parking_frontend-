@@ -150,7 +150,8 @@ const BookParking = () => {
         setUserBooking(selectedSpot);
   
         // Show confirmation
-        alert(`Booking confirmed for Spot ${savedBooking.slotNumber} at ${savedBooking.area}`);
+        alert(`Booking confirmed for ${savedBooking.slotNumber} at ${savedBooking.area}`);
+        
       } else {
         setBookingStatus(response.data.message || "Booking failed");
       }

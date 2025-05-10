@@ -28,7 +28,7 @@ const MyBookings = () => {
           `http://localhost:5000/bookings/${username}`
         );
         setBookings(res.data.bookings);
-        console.log(res.data.bookings)
+        console.log(res.data.bookings);
       } catch (err) {
         console.error(err);
         setError("Failed to fetch bookings.");
@@ -41,7 +41,7 @@ const MyBookings = () => {
   }, []);
 
   const handleViewDetails = (bookingId) => {
-    const booking = bookings.find((b) => b._id === bookingId);
+    const booking = bookings.find((b) => b.id === bookingId);
     setSelectedBooking(booking);
     setShowDetailModal(true);
   };
@@ -51,11 +51,32 @@ const MyBookings = () => {
     navigate("/dashboard", { state: { user } });
   };
   const handleCancelClick = (bookingId) => {
-    const booking = bookings.find((b) => b._id === bookingId);
+    const booking = bookings.find((b) => b.id === bookingId);
     setSelectedBooking(booking);
     setShowCancelModal(true);
   };
 
+  const handlePayment = async (bookingId) => {
+    try {
+      setLoading(true);
+      const booking = bookings.find(b => b.id === bookingId);
+      if (!booking) throw new Error("Booking not found");
+      const response = await axios.post("http://localhost:5000/payment", {
+        bookingId: booking.id,
+        username:booking.username,
+        totalAmount: 100 // Your amount
+      });
+      console.log(response)
+      
+      if (response.data.url) {
+        window.location.href = response.data.url; // Open Stripe
+      }
+    } catch (err) {
+      console.error("Payment error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleConfirmCancel = async () => {
     try {
       const response = await axios.delete(
@@ -63,9 +84,7 @@ const MyBookings = () => {
       );
 
       if (response.data.success) {
-        setBookings((prev) =>
-          prev.filter((b) => b.id !== selectedBooking.id)
-        );
+        setBookings((prev) => prev.filter((b) => b.id !== selectedBooking.id));
         setShowCancelModal(false);
         setSelectedBooking(null);
       } else {
@@ -133,17 +152,16 @@ const MyBookings = () => {
               <div className="flex justify-between items-center mt-4">
                 <span
                   className={`px-2 py-1 rounded-full text-md font-medium ${
-                    booking.bookingStatus != "Confirmed"
-                      ? "bg-green-100 text-green-700"
+                    booking.bookingStatus === "confirmed"
+                      ? "bg-green-600 text-white"
                       : "bg-orange-100 text-orange-700"
                   }`}
                 >
-                {booking.bookingStatus}
-                  
+                  {booking.bookingStatus}
                 </span>
                 <button
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                  onClick={() => handleViewDetails(booking._id)}
+                  onClick={() => handleViewDetails(booking.id)}
                 >
                   View Details
                 </button>
@@ -152,8 +170,6 @@ const MyBookings = () => {
           ))}
         </div>
       )}
-
-      {/* Booking Detail Modal */}
       {showDetailModal && selectedBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-white w-full max-w-lg p-6 rounded-xl shadow-lg">
@@ -183,14 +199,13 @@ const MyBookings = () => {
                 <strong>TIME:</strong> {selectedBooking.timeOfBooking}
               </p>
               <p>
-                <strong>PAYMENT STATUS:</strong>{" "}
-                {selectedBooking.paymentStatus || "Pending"}
+                <strong>PAYMENT STATUS:</strong> {selectedBooking.paymentStatus}
               </p>
               <p>
-                <strong>BOOKING STATUS:</strong> Confirmed
+                <strong>BOOKING STATUS:</strong> {selectedBooking.bookingStatus}
               </p>
             </div>
-            <div className="mt-6 flex space-x-70 flex-row">
+            <div className="mt-6 flex space-x-20 flex-row">
               <button
                 className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400"
                 onClick={() => {
@@ -199,6 +214,17 @@ const MyBookings = () => {
                 }}
               >
                 Close
+              </button>
+              <button
+                className="px-4 py-2 bg-green-300 rounded-lg hover:bg-green-400"
+                onClick={() => {
+                  handlePayment(selectedBooking.id);
+                  // console.log(selectedBooking.id)
+                  // console.log(bookings)
+                  setSelectedBooking(null);
+                }}
+              >
+                Checkout
               </button>
               <button
                 className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
